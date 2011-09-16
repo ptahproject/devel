@@ -1,5 +1,6 @@
 """ custom config """
 from memphis import config, view
+from zope.component import getSiteManager
 
 import ptah, ptah_cms
 from ptah.crowd.provider import CrowdUser, Session
@@ -12,8 +13,8 @@ def initialize(ev):
 
     user = Session.query(CrowdUser).first()
     if user is None:
-        Session.add(CrowdUser(
-            'Ptah admin', 'admin', 'admin@ptahproject.org', '12345'))
+        user = CrowdUser('Ptah admin','admin','admin@ptahproject.org','12345')
+        Session.add(user)
 
     # mount cms to /second/
     config.add_route(
@@ -33,12 +34,18 @@ def initialize(ev):
     factory = ptah_cms.ApplicationFactory('/', 'root', 'Ptah CMS')
 
     root = factory(None)
+    if user.uuid not in root.__local_roles__:
+        root.__local_roles__[user.uuid] = ['role:manager']
+
     if 'front-page' not in root.keys():
-        page = Page(title=u'Welcome to Ptah', 
-                    name=u'front-page', __parent__ = root)
+        page = Page(title=u'Welcome to Ptah')
         page.text = open(
             view.path('devapp:welcome.pt')[0], 'rb').read()
+
         Session.add(page)
+        getSiteManager().notify(ptah_cms.events.ContentCreatedEvent(page))
+
+        root['front-page'] = page
 
     config.add_route(
         'root-app', '/*traverse', 
