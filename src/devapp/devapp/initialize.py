@@ -1,5 +1,6 @@
 """ custom config """
 from memphis import config, view
+from zope import interface
 from zope.component import getSiteManager
 
 import ptah, ptah_cms
@@ -9,6 +10,28 @@ from ptah_app.content.folder import Folder
 
 pmap = ptah.security.PermissionsMap('simple-map', 'Simple permissions map')
 pmap.allow(ptah.security.Everyone, AddPage)
+
+
+class ApplicationPolicy(ptah.security.PermissionsMapSupport):
+    interface.implements(view.INavigationRoot,
+                         ptah.security.ILocalRolesAware)
+
+    __name__ = ''
+    __parent__ = None
+
+    __permissions__ = ['simple-map']
+
+    __local_roles__ = {}
+
+    def __init__(self, request):
+        self.request = request
+
+    @property
+    def __acl__(self):
+        acl = self._acl_()
+        acl.extend(ptah.security.ACL)
+        return acl
+
 
 
 @config.handler(ptah.WSGIAppInitialized)
@@ -36,7 +59,8 @@ def initialize(ev):
         factory = factory, use_global_views = True)
 
     # mount same 'root' application to different location
-    factory = ptah_cms.ApplicationFactory('/', 'root', 'Ptah CMS')
+    factory = ptah_cms.ApplicationFactory(
+        '/', 'root', 'Ptah CMS', policy=ApplicationPolicy)
     config.add_route(
         'root-app2', '/*traverse', 
         factory = factory, use_global_views = True)
@@ -50,12 +74,13 @@ def initialize(ev):
         user = CrowdUser('Ptah admin','admin','admin@ptahproject.org','12345')
         Session.add(user)
 
-    # give manager role to admin
-    if user.uuid not in root.__local_roles__:
-        root.__local_roles__[user.uuid] = ['role:manager']
+    ApplicationPolicy.__local_roles__ = {user.uuid: ['role:manager']}
 
-    if 'simple-map' not in root.__permissions__:
-        root.__permissions__ = ['simple-map']
+    # give manager role to admin
+    #if user.uuid not in root.__local_roles__:
+    #    root.__local_roles__[user.uuid] = ['role:manager']
+    #if 'simple-map' not in root.__permissions__:
+    #    root.__permissions__ = ['simple-map']
 
     # create default page
     if 'front-page' not in root.keys():
