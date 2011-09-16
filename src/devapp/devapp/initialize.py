@@ -52,20 +52,20 @@ def initialize(ev):
             '/third/cms/', 'third-app', 'CMS'),
         use_global_views = True)
 
-    # mount cms to /
+    # mount cms to /cms/
     factory = ptah_cms.ApplicationFactory('/cms/', 'root', 'Ptah CMS')
     config.add_route(
         'root-app', '/cms/*traverse', 
         factory = factory, use_global_views = True)
 
-    # mount same 'root' application to different location
+    # mount same 'root' application to '/' location
     factory = ptah_cms.ApplicationFactory(
         '/', 'root', 'Ptah CMS', policy=ApplicationPolicy)
     config.add_route(
         'root-app2', '/*traverse', 
         factory = factory, use_global_views = True)
 
-    # some more settings
+    # some more setup
     root = factory(None)
 
     # admin user
@@ -93,6 +93,7 @@ def initialize(ev):
 
         root['front-page'] = page
 
+    # create folder in root
     if 'folder' not in root.keys():
         folder = Folder(title='Test folder')
         root['folder'] = folder
@@ -107,4 +108,6 @@ def initialize(ev):
         getSiteManager().notify(ptah_cms.events.ContentCreatedEvent(page))
 
         folder['front-page'] = page
+
+        # set default view for folder
         folder.view = page.__uuid__
