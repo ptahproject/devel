@@ -4,7 +4,10 @@ from zope.component import getSiteManager
 
 import ptah, ptah_cms
 from ptah.crowd.provider import CrowdUser, Session
-from ptah_app.content.page import Page
+from ptah_app.content.page import Page, AddPage
+
+pmap = ptah.security.PermissionsMap('simple-map', 'Simple permissions map')
+pmap.allow(ptah.security.Everyone, AddPage)
 
 
 @config.handler(ptah.WSGIAppInitialized)
@@ -34,8 +37,13 @@ def initialize(ev):
     factory = ptah_cms.ApplicationFactory('/', 'root', 'Ptah CMS')
 
     root = factory(None)
+
+    # give manager role to admin
     if user.uuid not in root.__local_roles__:
         root.__local_roles__[user.uuid] = ['role:manager']
+
+    if 'simple-map' not in root.__permissions__:
+        root.__permissions__ = ['simple-map']
 
     if 'front-page' not in root.keys():
         page = Page(title=u'Welcome to Ptah')
