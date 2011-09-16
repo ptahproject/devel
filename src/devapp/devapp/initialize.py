@@ -5,6 +5,7 @@ from zope.component import getSiteManager
 import ptah, ptah_cms
 from ptah.crowd.provider import CrowdUser, Session
 from ptah_app.content.page import Page, AddPage
+from ptah_app.content.folder import Folder
 
 pmap = ptah.security.PermissionsMap('simple-map', 'Simple permissions map')
 pmap.allow(ptah.security.Everyone, AddPage)
@@ -60,4 +61,19 @@ def initialize(ev):
         getSiteManager().notify(ptah_cms.events.ContentCreatedEvent(page))
 
         root['front-page'] = page
-        root.view = page.__uuid__
+
+    if 'folder' not in root.keys():
+        folder = Folder(title='Test folder')
+        root['folder'] = folder
+        Session.add(folder)
+        getSiteManager().notify(ptah_cms.events.ContentCreatedEvent(folder))
+
+        page = Page(title=u'Welcome to Ptah')
+        page.text = open(
+            view.path('devapp:welcome.pt')[0], 'rb').read()
+
+        Session.add(page)
+        getSiteManager().notify(ptah_cms.events.ContentCreatedEvent(page))
+
+        folder['front-page'] = page
+        folder.view = page.__uuid__
