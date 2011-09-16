@@ -30,9 +30,15 @@ def initialize(ev):
         use_global_views = True)
 
     # mount cms to /
+    factory = ptah_cms.ApplicationFactory('/cms/', 'root', 'Ptah CMS')
+    config.add_route(
+        'root-app', '/cms/*traverse', 
+        factory = factory, use_global_views = True)
+
+    # mount same 'root' application to different location
     factory = ptah_cms.ApplicationFactory('/', 'root', 'Ptah CMS')
     config.add_route(
-        'root-app', '/*traverse', 
+        'root-app2', '/*traverse', 
         factory = factory, use_global_views = True)
 
     # some more settings
