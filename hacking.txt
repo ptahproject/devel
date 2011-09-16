@@ -1,0 +1,32 @@
+========
+Ptah dev
+========
+
+1.run buildout:
+
+   >> python2.7 ./bootstrap.py -c readonly.cfg
+   >> ./bin/buildout -c readonly.cfg
+
+2. Run application:
+
+   >> ./bin/paster serve ptah.ini
+
+3. Application runs on 8080 port:
+
+   >> http://localhost:8080/
+
+4. Default login `admin`, password: `12345`
+
+5. List application settings
+
+   >> ./bin/paster settings -a
+   >> ./bin/paster settings -l mail
+   >> ./bin/paster settings -p
+   
+6. Application template customizations
+
+   >> ./bin/paster templates -h
+   
+7 Application static assets management
+
+  >> ./bin/paster static -h

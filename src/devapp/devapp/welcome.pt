@@ -1,0 +1,49 @@
+<h2>Get started</h2> 
+
+<pre>
+================
+Ptah dev example
+================
+
+1. Create dir `ptah`
+
+  >> mkdir ptah
+  >> cd ptah
+
+2. Init git repo:
+
+  >> git init
+  >> git remote add origin git://github.com/fafhrd91/tartarus.git
+  >> git fetch origin
+  >> git mergfe origin/master
+
+3.run buildout:
+
+   >> python2.7 ./bootstrap.py
+   >> ./bin/buildout -n
+
+4. Run application:
+
+   >> ./bin/paster serve dev.ini
+
+5. Application runs on 8080 port:
+
+   >> http://localhost:8080/
+
+5. Default login `admin`, password: `12345`
+
+6. List application settings
+
+   >> ./bin/paster settings -a
+   >> ./bin/paster settings -l mail
+   >> ./bin/paster settings -p
+
+7. Application template customizations
+
+   >> ./bin/paster templates -h
+...
+8. Application static assets management
+
+  >> ./bin/paster static -h
+
+</pre>
