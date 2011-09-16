@@ -14,11 +14,6 @@ pmap.allow(ptah.security.Everyone, AddPage)
 def initialize(ev):
     config = ev.config
 
-    user = Session.query(CrowdUser).first()
-    if user is None:
-        user = CrowdUser('Ptah admin','admin','admin@ptahproject.org','12345')
-        Session.add(user)
-
     # mount cms to /second/
     config.add_route(
         'second-app', '/second/*traverse', 
@@ -35,8 +30,18 @@ def initialize(ev):
 
     # mount cms to /
     factory = ptah_cms.ApplicationFactory('/', 'root', 'Ptah CMS')
+    config.add_route(
+        'root-app', '/*traverse', 
+        factory = factory, use_global_views = True)
 
+    # some more settings
     root = factory(None)
+
+    # admin user
+    user = Session.query(CrowdUser).first()
+    if user is None:
+        user = CrowdUser('Ptah admin','admin','admin@ptahproject.org','12345')
+        Session.add(user)
 
     # give manager role to admin
     if user.uuid not in root.__local_roles__:
@@ -45,6 +50,7 @@ def initialize(ev):
     if 'simple-map' not in root.__permissions__:
         root.__permissions__ = ['simple-map']
 
+    # create default page
     if 'front-page' not in root.keys():
         page = Page(title=u'Welcome to Ptah')
         page.text = open(
@@ -54,7 +60,4 @@ def initialize(ev):
         getSiteManager().notify(ptah_cms.events.ContentCreatedEvent(page))
 
         root['front-page'] = page
-
-    config.add_route(
-        'root-app', '/*traverse', 
-        factory = factory, use_global_views = True)
+        root.view = page.__uuid__

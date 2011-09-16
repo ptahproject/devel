@@ -13,18 +13,18 @@ Ptah dev example
 2. Init git repo:
 
   >> git init
-  >> git remote add origin git://github.com/fafhrd91/tartarus.git
+  >> git remote add origin git://github.com/ptahproject/devel.git
   >> git fetch origin
-  >> git mergfe origin/master
+  >> git merge origin/master
 
-3.run buildout:
+3.run buildout, python2.7.2 is required:
 
    >> python2.7 ./bootstrap.py
-   >> ./bin/buildout -n
+   >> ./bin/buildout -N -c readonly.cfg
 
 4. Run application:
 
-   >> ./bin/paster serve dev.ini
+   >> ./bin/paster serve ptah.ini
 
 5. Application runs on 8080 port:
 
@@ -41,7 +41,7 @@ Ptah dev example
 7. Application template customizations
 
    >> ./bin/paster templates -h
-...
+
 8. Application static assets management
 
   >> ./bin/paster static -h
