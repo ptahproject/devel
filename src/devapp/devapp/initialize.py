@@ -34,9 +34,13 @@ class ApplicationPolicy(ptah.security.PermissionsMapSupport):
 
 
 
+
 @config.handler(ptah.WSGIAppInitialized)
 def initialize(ev):
     config = ev.config
+
+    config.add_route('test-welcome', '/welcome.html')
+    config.add_view(route_name='test-welcome', renderer='devapp:welcome.pt')
 
     # mount cms to /second/
     config.add_route(
