@@ -30,20 +30,20 @@ class ApplicationPolicy(object):
 
 @config.handler(ptah.WSGIAppInitialized)
 def initialize(ev):
-    config = ev.config
+    pconfig = ev.config
 
-    config.add_route('test-welcome', '/welcome.html')
-    config.add_view(route_name='test-welcome', renderer='devapp:welcome.pt')
+    pconfig.add_route('test-welcome', '/welcome.html')
+    pconfig.add_view(route_name='test-welcome', renderer='devapp:welcome.pt')
 
     # mount cms to /second/
-    config.add_route(
+    pconfig.add_route(
         'second-app', '/second/*traverse', 
         factory = ptah_cms.ApplicationFactory(
             '/second/', 'second', 'Test subpath CMS'),
         use_global_views = True)
 
     # mount cms to /third/cms/
-    config.add_route(
+    pconfig.add_route(
         'third-app', '/third/cms/*traverse', 
         factory = ptah_cms.ApplicationFactory(
             '/third/cms/', 'third-app', 'CMS'),
@@ -51,14 +51,14 @@ def initialize(ev):
 
     # mount cms to /cms/
     factory = ptah_cms.ApplicationFactory('/cms/', 'root', 'Ptah CMS')
-    config.add_route(
+    pconfig.add_route(
         'root-app', '/cms/*traverse', 
         factory = factory, use_global_views = True)
 
     # mount same 'root' application to '/' location
     factory = ptah_cms.ApplicationFactory(
         '/', 'root', 'Ptah CMS', policy=ApplicationPolicy)
-    config.add_route(
+    pconfig.add_route(
         'root-app2', '/*traverse', 
         factory = factory, use_global_views = True)
 
