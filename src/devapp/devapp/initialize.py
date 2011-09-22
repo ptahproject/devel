@@ -8,31 +8,25 @@ from ptah.crowd.provider import CrowdUser, Session
 from ptah_app.content.page import Page, AddPage
 from ptah_app.content.folder import Folder
 
-pmap = ptah.security.PermissionsMap('simple-map', 'Simple permissions map')
-pmap.allow(ptah.security.Everyone, AddPage)
+acl = ptah.ACL('simple-map', 'Simple permissions map')
+acl.allow(ptah.Everyone, AddPage)
 
 
-class ApplicationPolicy(ptah.security.PermissionsMapSupport):
+class ApplicationPolicy(object):
     interface.implements(view.INavigationRoot,
-                         ptah.security.ILocalRolesAware)
+                         ptah.ILocalRolesAware)
 
     __name__ = ''
     __parent__ = None
 
-    __permissions__ = ['simple-map']
+    __acls__ = ['simple-map', '']
+    
+    __acl__ = ptah.ACLsProperty()
 
     __local_roles__ = {}
 
     def __init__(self, request):
         self.request = request
-
-    @property
-    def __acl__(self):
-        acl = self._acl_()
-        acl.extend(ptah.security.ACL)
-        return acl
-
-
 
 
 @config.handler(ptah.WSGIAppInitialized)
