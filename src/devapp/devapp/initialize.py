@@ -1,7 +1,6 @@
 """ custom config """
 from memphis import config, view
 from zope import interface
-from zope.component import getSiteManager
 
 import ptah, ptah_cms
 from ptah.crowd.provider import CrowdUser, Session
@@ -87,7 +86,7 @@ def initialize(ev):
             view.path('devapp:welcome.pt')[0], 'rb').read()
 
         Session.add(page)
-        getSiteManager().notify(ptah_cms.events.ContentCreatedEvent(page))
+        config.notify(ptah_cms.events.ContentCreatedEvent(page))
 
         root['front-page'] = page
 
@@ -96,14 +95,14 @@ def initialize(ev):
         folder = Folder(title='Test folder')
         root['folder'] = folder
         Session.add(folder)
-        getSiteManager().notify(ptah_cms.events.ContentCreatedEvent(folder))
+        config.notify(ptah_cms.events.ContentCreatedEvent(folder))
 
         page = Page(title=u'Welcome to Ptah')
         page.text = open(
             view.path('devapp:welcome.pt')[0], 'rb').read()
 
         Session.add(page)
-        getSiteManager().notify(ptah_cms.events.ContentCreatedEvent(page))
+        config.notify(ptah_cms.events.ContentCreatedEvent(page))
 
         folder['front-page'] = page
 
