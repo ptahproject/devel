@@ -1,0 +1,19 @@
+1. versioning
+2. staging
+3. translation
+4. reference engine
+5. link integrity
+6. in request cache
+7. pickle cache
+8. transformation (Products.PortalTranforms)
+
+9. workflow
+10. searching
+
+
+future
+------
+
+1. filesystem python script
+2. filesystem assets
+3. filesystem layouts
