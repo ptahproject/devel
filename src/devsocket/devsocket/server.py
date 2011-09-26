@@ -33,7 +33,7 @@ from pyramid.config import Configurator
 
 
 HOST = '0.0.0.0'
-PORT = 8080
+PORT = 9090
 
 
 def make_app(**settings):
