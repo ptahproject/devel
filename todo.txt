@@ -1,3 +1,4 @@
+* auto generate schema from sqlalchemy model
 * versioning
 * staging
 * translation
