@@ -71,7 +71,7 @@ def initialize(ev):
         user = CrowdUser('Ptah admin','admin','admin@ptahproject.org','12345')
         Session.add(user)
 
-    ApplicationPolicy.__local_roles__ = {user.uuid: ['role:manager']}
+    ApplicationPolicy.__local_roles__ = {user.uri: ['role:manager']}
 
     # give manager role to admin
     #if user.uuid not in root.__local_roles__:
@@ -107,4 +107,4 @@ def initialize(ev):
         folder['front-page'] = page
 
         # set default view for folder
-        folder.view = page.__uuid__
+        folder.view = page.__uri__
