@@ -21,8 +21,6 @@
 #-----------------------------------------------------------------------------#
 
 
-import gevent
-
 from pyramid.response import Response
 from pyramid.view import view_config
 from pyramid_socketio.io import SocketIOContext

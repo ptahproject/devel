@@ -26,7 +26,7 @@ gevent.monkey.patch_all()
 
 
 import argparse
-import gevent.pywsgi
+import socketio
 import sys
 
 from pyramid.config import Configurator
@@ -46,7 +46,7 @@ def make_app(**settings):
 
 
 def serve_gevent(app, host=HOST, port=PORT):
-    server = gevent.pywsgi.WSGIServer((host, port), app)
+    server = socketio.SocketIOServer((host, port), app, resource='socket.io')
     try:
         server.serve_forever()
     except KeyboardInterrupt:
