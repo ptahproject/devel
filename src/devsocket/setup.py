@@ -27,6 +27,7 @@ from setuptools import setup
 
 requires = [
     'pyramid',
+    'pyramid_socketio',
     'gevent',
     'gevent-socketio',
     'gevent-websocket',

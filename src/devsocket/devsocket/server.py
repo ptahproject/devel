@@ -38,13 +38,14 @@ PORT = 9090
 
 def make_app(**settings):
     config = Configurator(settings=settings)
-    config.add_route('views.broadcast', '/views/broadcast')
+    config.add_route('views.broadcast', '/broadcast')
+    config.add_route('views.socket_io', '/socket.io/*remaining')
     config.scan('devsocket.views')
     app = config.make_wsgi_app()
     return app
 
 
-def serve_gevent(app, host, port):
+def serve_gevent(app, host=HOST, port=PORT):
     server = gevent.pywsgi.WSGIServer((host, port), app)
     try:
         server.serve_forever()
@@ -55,7 +56,7 @@ def serve_gevent(app, host, port):
 def main():
     settings = {}
     app = make_app(**settings)
-    serve_gevent(app, HOST, PORT)
+    serve_gevent(app)
 
 
 if __name__ == '__main__':

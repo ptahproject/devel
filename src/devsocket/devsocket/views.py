@@ -21,7 +21,12 @@
 #-----------------------------------------------------------------------------#
 
 
+import gevent
+
+from pyramid.response import Response
 from pyramid.view import view_config
+from pyramid_socketio.io import SocketIOContext
+from pyramid_socketio.io import socketio_manage
 
 
 @view_config(route_name='views.broadcast', request_method='POST', renderer='string')
@@ -29,3 +34,19 @@ def broadcast_view(request):
     event_name = request.POST.get('event_name')
     if event_name:
         pass
+
+
+class ConnectIOContext(SocketIOContext):
+    # self.io is the Socket.IO socket
+    # self.request is the request
+    def msg_connect(self, msg):
+        print "Connect message received", msg
+        self.msg("connected", hello="world")
+
+
+# Socket.IO implementation
+@view_config(route_name="views.socket_io")
+def socketio_service(request):
+    print "Socket.IO request running"
+    retval = socketio_manage(ConnectIOContext(request))
+    return Response(retval)
