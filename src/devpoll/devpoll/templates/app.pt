@@ -1,0 +1,14 @@
+<div class="page-header">
+  <h1>Polls</h1>
+</div>
+
+<table class="zebra-stripped">
+  <tbody>
+    <tr tal:repeat="poll view.polls">
+      <td>
+	<h3><a href="/polls/${poll.__id__}/">${poll.title}</a></h3>
+	<p>${poll.description}</p>
+      </td>
+    </tr>
+  </tbody>
+</table>
