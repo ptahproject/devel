@@ -30,6 +30,9 @@ from pyramid_socketio.io import SocketIOContext
 from pyramid_socketio.io import socketio_manage
 
 
+_messages = []
+
+
 @view_config(route_name='views.home', request_method='GET', renderer='string')
 def home_view(request):
     return render_to_response('templates/home.pt', {}, request=request)
@@ -37,29 +40,27 @@ def home_view(request):
 
 @view_config(route_name='views.broadcast', renderer='string')
 def broadcast_view(request):
-    event_name = request.POST.get('event_name')
-    if event_name is None:
-        event_name = request.GET.get('event_name')
-    if event_name:
-        pass
+    message = request.POST.get('message')
+    if message is None:
+        message = request.GET.get('message')
+    if message:
+        _messages.append(message)
 
 
 class ConnectIOContext(SocketIOContext):
 
-    # self.io is the Socket.IO socket
-    # self.request is the request
-
     def msg_connect(self, msg):
         print "connect message received", msg
-        self.msg("connected", hello="world")
         def broadcast():
-            while True:
-                self.msg('message')
+            index = len(_messages)
+            while self.io.connected():
+                while index < len(_messages):
+                    self.msg('message', message=_messages[index])
+                    index += 1
                 gevent.sleep(0.5)
         self.spawn(broadcast)
 
 
-# Socket.IO implementation
 @view_config(route_name="views.socket_io")
 def socketio_service(request):
     print "socket.io request running"

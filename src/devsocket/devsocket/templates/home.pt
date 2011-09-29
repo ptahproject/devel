@@ -14,20 +14,17 @@
                                               rememberTransport: false});
 
             socket.on('connect', function() {
-                alert('connected');
                 socket.send({type: 'connect'});
             });
 
             socket.on('message', function(obj) {
-                alert('messaged');
+                alert(obj.message);
             });
 
             socket.on('error', function(obj) {
-                alert('errored');
             });
 
             socket.on('disconnect', function() {
-                alert('disconnected');
             });
 
             socket.connect();
