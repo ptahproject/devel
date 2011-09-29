@@ -23,6 +23,7 @@
 
 import gevent
 
+from pyramid.renderers import render_to_response
 from pyramid.response import Response
 from pyramid.view import view_config
 from pyramid_socketio.io import SocketIOContext
@@ -31,7 +32,7 @@ from pyramid_socketio.io import socketio_manage
 
 @view_config(route_name='views.home', request_method='GET', renderer='string')
 def home_view(request):
-    pass
+    return render_to_response('templates/home.pt', {}, request=request)
 
 
 @view_config(route_name='views.broadcast', request_method='POST', renderer='string')
