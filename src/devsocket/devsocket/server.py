@@ -24,12 +24,11 @@
 import gevent.monkey
 gevent.monkey.patch_all()
 
-
-import argparse
+import gevent
 import socketio
-import sys
 
 from pyramid.config import Configurator
+from pyramid.session import UnencryptedCookieSessionFactoryConfig
 
 
 HOST = '0.0.0.0'
@@ -37,7 +36,9 @@ PORT = 9090
 
 
 def make_app(**settings):
-    config = Configurator(settings=settings)
+    session_factory = UnencryptedCookieSessionFactoryConfig('random_secret')
+    config = Configurator(settings=settings, session_factory=session_factory)
+    config.add_route('views.home', '/')
     config.add_route('views.broadcast', '/broadcast')
     config.add_route('views.socket_io', '/socket.io/*remaining')
     config.scan('devsocket.views')
@@ -53,10 +54,15 @@ def serve_gevent(app, host=HOST, port=PORT):
         server.kill()
 
 
-def main():
+def spawned_main():
     settings = {}
     app = make_app(**settings)
     serve_gevent(app)
+
+
+def main():
+    jobs = [gevent.spawn(spawned_main)]
+    gevent.joinall(jobs)
 
 
 if __name__ == '__main__':
