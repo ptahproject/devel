@@ -35,7 +35,7 @@ class AddPollForm(form.Form):
 
 
 class ApplicationView(view.View):
-    view.pyramidView('index.html', app.PollApplication, default=True,
+    view.pyramidView(context = app.PollApplication,
                      permission = ptah_cms.View,
                      template = view.template('templates/app.pt'))
 
