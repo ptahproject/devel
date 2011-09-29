@@ -36,6 +36,7 @@ class AddPollForm(form.Form):
 
 class ApplicationView(view.View):
     view.pyramidView('index.html', app.PollApplication, default=True,
+                     permission = ptah_cms.View,
                      template = view.template('templates/app.pt'))
 
     def update(self):

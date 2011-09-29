@@ -7,4 +7,23 @@ if not server.login():
 else:
     print 'success'
     print server.authtkn
-    
+
+cms = server.applications['']
+
+print cms, cms.__type__
+
+
+pageType = server.types['page']
+print pageType, pageType.title
+
+for field in pageType.schema:
+    print field
+
+
+content = cms.create(pageType, 'test-page.html',
+                     title = 'Test page',
+                     description = 'Description',
+                     text = '<h2>Page from rest</h2>')
+
+content.update(title = 'Test page modified',
+               text = '<h2>Page from rest</h2> <br /> Modified')

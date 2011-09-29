@@ -2,8 +2,12 @@ import socket, errno
 import httplib, urllib, urlparse
 import simplejson as json
 
+from pprint import pprint
+
 __version__ = '0.1'
 
+
+TRANSPORT = None
 
 class PtahClient(object):
 
@@ -17,9 +21,12 @@ class PtahClient(object):
             path = path[:-1]
 
         self.path = path
-        self.transport = Transport(url, authtkn)
         self._auth_checked = False
         self.message = ''
+
+        self.transport = Transport(url, authtkn)
+        global TRANSPORT
+        TRANSPORT = self.transport
 
     def login(self):
         params = {}
@@ -39,6 +46,98 @@ class PtahClient(object):
         self.authtkn = data['auth-token']
         self.transport.set_auth_token(self.authtkn)
         return True
+
+    def _loadTypes(self):
+        status, data = self.transport.request(
+            '%s/cms/types'%self.path)
+
+        types = {}
+        for rec in data:
+            types[rec['name']] = UriObject('', rec['__uri__'], **rec)
+
+        self.__dict__['types'] = types
+
+    def _loadApplications(self):
+        status, data = self.transport.request(
+            '%s/cms/applications'%self.path)
+
+        apps = {}
+        for rec in data:
+            base = '%s/cms/content:%s'%(self.path, rec['__mount__'])
+            apps[rec['__mount__']] = createObj(base, rec)
+
+        self.__dict__['applications'] = apps
+
+    def __getattr__(self, name):
+        if name == 'types':
+            self._loadTypes()
+            return self.types
+
+        if name == 'applications':
+            self._loadApplications()
+            return self.applications
+
+        raise AttributeError(name)
+
+
+APIDOC = {}
+
+class UriObject(object):
+
+    def __init__(self, base, uri, **data):
+        self.__dict__.update(data)
+        self._base = base
+        self.__uri__ = uri
+
+    def apidoc(self):
+        if self.__type__ in APIDOC:
+            return APIDOC[self.__type__]
+
+        # load apidoc
+        status, data = TRANSPORT.request(
+            '%s/%s/apidoc'%(self._base, self.__uri__))
+
+        print status
+        pprint(data)
+
+
+def createObj(base, data):
+    if data.get('__content__'):
+        if data.get('__container__'):
+            return Container(base, data['__uri__'], **data)
+        else:
+            return Content(base, data['__uri__'], **data)
+    else:
+        return Node(base, data['__uri__'], **data)
+
+
+class Node(UriObject):
+    pass
+
+
+class Content(Node):
+
+    def update(self, **data):
+        status, rec = TRANSPORT.request(
+            '%s/%s/update'%(self._base, self.__uri__), params=data)
+
+        if status != 200:
+            raise Exception(rec)
+
+        self.__dict__.update(rec)
+
+
+class Container(Content):
+
+    def create(self, tinfo, name, **data):
+        status, rec = TRANSPORT.request(
+            '%s/%s/create'%(self._base, self.__uri__),
+            {'tinfo': tinfo.__uri__, 'name': name}, data)
+
+        if status != 200:
+            raise Exception(rec)
+
+        return createObj(self._base, rec)
 
 
 class Transport(object):
@@ -63,11 +162,14 @@ class Transport(object):
 
     def set_auth_token(self, token):
         if token:
-            self.headers['HTTP_X_AUTH_TOKEN'] = token
-        elif 'HTTP_X_AUTH_TOKEN' in self.headers:
-            del self.headers['HTTP_X_AUTH_TOKEN']
+            self.headers['X_AUTH_TOKEN'] = token
+        elif 'X_AUTH_TOKEN' in self.headers:
+            del self.headers['X_AUTH_TOKEN']
 
     def request(self, handler, args=None, params=None, verbose=0):
+        if args:
+            handler = '%s?%s'%(handler, urllib.urlencode(args))
+
         if params:
             request_body = urllib.urlencode(params)
         else:
@@ -86,8 +188,8 @@ class Transport(object):
 
     def single_request(self, handler, request_body, verbose=0):
         h = self.get_connection()
-        #if verbose:
-        h.set_debuglevel(100)
+        if verbose:
+            h.set_debuglevel(1)
 
         try:
             headers = dict(self.headers)
