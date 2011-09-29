@@ -36,10 +36,8 @@ class Poll(ptah_cms.Node):
 
     __type__ = ptah_cms.Type(
         'devpoll-poll', 'Poll',
-        permission = permissions.AddPoll,
         add = 'addpoll.html',
-        global_allow = False)
-
+        permission = permissions.AddPoll)
 
     _sql_get = ptah.QueryFreezer(
         lambda: ptah_cms.Session.query(Poll)\
