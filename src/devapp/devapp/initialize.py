@@ -13,7 +13,8 @@ acl.allow(ptah.Everyone, AddPage)
 
 class ApplicationPolicy(object):
     interface.implements(view.INavigationRoot,
-                         ptah.ILocalRolesAware)
+                         ptah.ILocalRolesAware,
+                         ptah_cms.IApplicationPolicy)
 
     __name__ = ''
     __parent__ = None
