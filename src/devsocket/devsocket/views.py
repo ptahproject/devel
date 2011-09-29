@@ -35,9 +35,11 @@ def home_view(request):
     return render_to_response('templates/home.pt', {}, request=request)
 
 
-@view_config(route_name='views.broadcast', request_method='POST', renderer='string')
+@view_config(route_name='views.broadcast', renderer='string')
 def broadcast_view(request):
     event_name = request.POST.get('event_name')
+    if event_name is None:
+        event_name = request.GET.get('event_name')
     if event_name:
         pass
 
@@ -51,7 +53,7 @@ class ConnectIOContext(SocketIOContext):
         print "connect message received", msg
         self.msg("connected", hello="world")
         def broadcast():
-            while self.io.connected():
+            while True:
                 self.msg('message')
                 gevent.sleep(0.5)
         self.spawn(broadcast)
@@ -61,5 +63,5 @@ class ConnectIOContext(SocketIOContext):
 @view_config(route_name="views.socket_io")
 def socketio_service(request):
     print "socket.io request running"
-    ret_val = socketio_manage(ConnectIOContext(request))
-    return Response(ret_val)
+    return_value = socketio_manage(ConnectIOContext(request))
+    return Response(return_value)
