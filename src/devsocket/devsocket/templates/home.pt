@@ -6,5 +6,31 @@
         <title>devsocket</title>
     </head>
     <body>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+        <script src="http://cdn.socket.io/stable/socket.io.js"></script>
+        <script>
+            var socket = new io.Socket(null, {port: 9090,
+                                              rememberTransport: false});
+
+            socket.on('connect', function() {
+                alert('connected');
+                socket.send({type: 'connect'});
+            });
+
+            socket.on('message', function(obj) {
+                alert('messaged');
+            });
+
+            socket.on('error', function(obj) {
+                alert('errored');
+            });
+
+            socket.on('disconnect', function() {
+                alert('disconnected');
+            });
+
+            socket.connect();
+        </script>
     </body>
 </html>

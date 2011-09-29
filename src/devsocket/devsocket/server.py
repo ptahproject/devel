@@ -28,7 +28,6 @@ import gevent
 import socketio
 
 from pyramid.config import Configurator
-from pyramid.session import UnencryptedCookieSessionFactoryConfig
 
 
 HOST = '0.0.0.0'
@@ -36,8 +35,7 @@ PORT = 9090
 
 
 def make_app(**settings):
-    session_factory = UnencryptedCookieSessionFactoryConfig('random_secret')
-    config = Configurator(settings=settings, session_factory=session_factory)
+    config = Configurator(settings=settings)
     config.add_route('views.home', '/')
     config.add_route('views.broadcast', '/broadcast')
     config.add_route('views.socket_io', '/socket.io/*remaining')
