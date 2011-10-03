@@ -10,24 +10,24 @@ logger = logging.getLogger('plone.utils')
 MSG = None
 
 
-@config.subscriber(ptah_cms.ContentEvent)
-def contentEvent(ev):
-    global MSG
-    if MSG is not None:
-        MSG.send('%s: %s'%(ev.__class__.__name__, ev.object.title))
+#@config.subscriber(ptah_cms.ContentEvent)
+#def contentEvent(ev):
+#    global MSG
+    #if MSG is not None:
+    #    MSG.send('%s: %s'%(ev.__class__.__name__, ev.object.title))
 
 
-@config.subscriber(config.SettingsInitialized)
-def initialized(ev):
-    global MSG
-    if ev.config:
-        MSG = MSGService()
+#@config.subscriber(config.SettingsInitialized)
+#def initialized(ev):
+#    global MSG
+    #if ev.config:
+    #    MSG = MSGService()
 
-@config.shutdownHandler
-def shutdown():
-    global MSG
-    if MSG is not None:
-        MSG.stopThreads()
+#@config.shutdownHandler
+#def shutdown():
+#    global MSG
+    #if MSG is not None:
+    #    MSG.stopThreads()
 
 
 class MSGService(object):

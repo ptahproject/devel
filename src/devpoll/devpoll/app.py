@@ -1,4 +1,5 @@
 """ poll application """
+import sqlalchemy as sqla
 from zope import interface
 
 import ptah
@@ -14,7 +15,7 @@ class PollApplicationPolicy(ptah_cms.ApplicationPolicy):
     __acl__ = APP_ACL
 
 
-class PollApplication(ptah_cms.Node):
+class PollApplication(ptah_cms.Container):
     interface.implements(ptah_app.IPtahAppRoot)
 
     __name__ = ''

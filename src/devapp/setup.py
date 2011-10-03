@@ -6,6 +6,7 @@ requires = [
     'ptah',
     'ptah_cms',
     'ptah_app',
+    'poster',
 ]
 
 

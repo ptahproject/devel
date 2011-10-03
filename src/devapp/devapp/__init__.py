@@ -3,8 +3,8 @@
 from memphis import view
 
 
-view.registerLayout('page', view.INavigationRoot, layer='devapp',
-                    template = view.template('templates/layoutpage.pt'))
+#view.registerLayout('page', view.INavigationRoot, layer='devapp',
+#                    template = view.template('templates/layoutpage.pt'))
 
 
 view.static('socketio', 'devapp:socketio/')
