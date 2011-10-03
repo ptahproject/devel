@@ -1,6 +1,7 @@
 import socket, errno
 import httplib, urllib, urlparse
 import simplejson as json
+import poster.encode
 
 from pprint import pprint
 
@@ -171,13 +172,16 @@ class Transport(object):
             handler = '%s?%s'%(handler, urllib.urlencode(args))
 
         if params:
-            request_body = urllib.urlencode(params)
+            request_body, headers = poster.encode.multipart_encode(params)
+            request_body = ''.join(request_body)
         else:
             request_body = ''
+            headers = {}
         
         for i in (0, 1):
             try:
-                return self.single_request(handler, request_body, verbose)
+                return self.single_request(
+                    handler, request_body, headers, verbose)
             except socket.error, e:
                 if i or e.errno not in (errno.ECONNRESET,
                                         errno.ECONNABORTED, errno.EPIPE):
@@ -186,19 +190,20 @@ class Transport(object):
                 if i:
                     raise
 
-    def single_request(self, handler, request_body, verbose=0):
+    def single_request(self, handler, request_body, headers, verbose=0):
         h = self.get_connection()
         if verbose:
             h.set_debuglevel(1)
 
         try:
-            headers = dict(self.headers)
-            headers['HOST'] = self.h_netloc
-            headers['User-Agent'] = self.user_agent
-            headers['Content-Type'] = 'application/x-www-form-urlencoded'
-            headers['Content-Length'] = len(request_body)
+            f_headers = dict(self.headers)
+            f_headers['HOST'] = self.h_netloc
+            f_headers['User-Agent'] = self.user_agent
+            f_headers['Content-Type'] = 'application/x-www-form-urlencoded'
+            #headers['Content-Length'] = len(request_body)
+            f_headers.update(headers)
             
-            h.request("POST", handler, request_body, headers)
+            h.request("POST", handler, request_body, f_headers)
             response = h.getresponse(buffering=True)
             return self.parse_response(response)
         except Exception:

@@ -27,3 +27,11 @@ content = cms.create(pageType, 'test-page.html',
 
 content.update(title = 'Test page modified',
                text = '<h2>Page from rest</h2> <br /> Modified')
+
+
+fileType = server.types['file']
+
+cms.create(fileType, 'repoze.gif', 
+           title = 'Test file',
+           description = '',
+           data = open('repoze.gif', 'rb'))
