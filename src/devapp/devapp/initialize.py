@@ -2,7 +2,7 @@
 from memphis import config, view
 from zope import interface
 
-import ptah, ptah_cms
+import ptah, ptah_cms, ptah_app
 from ptah.crowd.provider import CrowdUser, Session
 from ptah_app.content.page import Page, AddPage
 from ptah_app.content.folder import Folder
@@ -10,10 +10,11 @@ from ptah_app.content.folder import Folder
 acl = ptah.ACL('simple-map', 'Simple permissions map')
 acl.allow(ptah.Everyone, AddPage)
 
+interface.classImplements(ptah_cms.ApplicationRoot, ptah_app.IPtahAppRoot)
+
 
 class ApplicationPolicy(object):
-    interface.implements(view.INavigationRoot,
-                         ptah.ILocalRolesAware,
+    interface.implements(ptah.ILocalRolesAware,
                          ptah_cms.IApplicationPolicy)
 
     __name__ = ''
@@ -29,7 +30,7 @@ class ApplicationPolicy(object):
         self.request = request
 
 
-@config.handler(ptah.WSGIAppInitialized)
+@config.subscriber(ptah.WSGIAppInitialized)
 def initialize(ev):
     pconfig = ev.config
 

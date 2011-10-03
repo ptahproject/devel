@@ -10,14 +10,14 @@ logger = logging.getLogger('plone.utils')
 MSG = None
 
 
-@config.handler(ptah_cms.ContentEvent)
+@config.subscriber(ptah_cms.ContentEvent)
 def contentEvent(ev):
     global MSG
     if MSG is not None:
         MSG.send('%s: %s'%(ev.__class__.__name__, ev.object.title))
 
 
-@config.handler(config.SettingsInitialized)
+@config.subscriber(config.SettingsInitialized)
 def initialized(ev):
     global MSG
     if ev.config:
