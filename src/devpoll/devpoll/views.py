@@ -14,7 +14,7 @@ class AddPollForm(form.Form):
 
     @property
     def fields(self):
-        return form.Fields(poll.Poll.__type__.schema)
+        return form.Fieldset(poll.Poll.__type__.schema)
 
     @form.button(u'Add poll', actype=form.AC_PRIMARY)
     def addHandler(self):
