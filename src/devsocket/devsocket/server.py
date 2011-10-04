@@ -1,5 +1,4 @@
 import gevent.monkey
-gevent.monkey.patch_all()
 
 import gevent
 import socketio
@@ -41,4 +40,5 @@ def main():
 
 
 if __name__ == '__main__':
+    gevent.monkey.patch_all()
     main()
