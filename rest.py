@@ -16,7 +16,7 @@ print cms, cms.__type__
 pageType = server.types['page']
 print pageType, pageType.title
 
-for field in pageType.schema:
+for field in pageType.fieldset:
     print field
 
 

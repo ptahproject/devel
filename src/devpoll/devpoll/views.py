@@ -11,14 +11,11 @@ class AddPollForm(form.Form):
     view.pyramidView('addpoll.html', app.PollApplication)
 
     label = 'Add new poll'
-
-    @property
-    def fields(self):
-        return form.Fieldset(poll.Poll.__type__.schema)
+    fields = poll.Poll.__type__.fieldset
 
     @form.button(u'Add poll', actype=form.AC_PRIMARY)
     def addHandler(self):
-        data, errors = self.extractData()
+        data, errors = self.extract()
 
         if errors:
             self.message(errors, 'form-error')
