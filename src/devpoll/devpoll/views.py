@@ -46,4 +46,4 @@ class PollView(view.View):
                      template = view.template('templates/poll.pt'))
 
     def update(self):
-        self.poll = poll.Poll.get(self.request.matchdict['id']) 
+        self.poll = poll.Poll.get(self.request.matchdict['id'])

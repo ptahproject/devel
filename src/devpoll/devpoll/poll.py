@@ -1,15 +1,14 @@
 """ poll """
 import ptah
 import ptah_cms
-import colander
 import sqlalchemy as sqla
-from memphis import config
+from memphis import config, form
 
 import permissions
 
 
 class Poll(ptah_cms.Node):
-    
+
     __tablename__ = 'devapp_polls'
     __id__ = sqla.Column(
         'id', sqla.Integer,
@@ -17,21 +16,16 @@ class Poll(ptah_cms.Node):
 
     title = sqla.Column(
         sqla.Unicode(), default=u'',
-        info = {'title': 'Title',
-                'widget': 'text' })
+        info = {'title': 'Title'})
 
     description = sqla.Column(
         sqla.Unicode(), default=u'',
         info = {'title': 'Title',
-                'widget': 'textarea'})
+                'field_type': 'textarea'})
 
     choices = sqla.Column(
         ptah.JsonListType(), default=[],
-        info = {'node': colander.SchemaNode(
-                colander.Sequence(), colander.SchemaNode(colander.Str()),
-                title = 'Choices',
-                widget = 'textlines'),
-                }
+        info = {'field': form.LinesField('choices', title = 'Choices')}
         )
 
     __type__ = ptah_cms.Type(

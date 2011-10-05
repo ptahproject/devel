@@ -37,7 +37,7 @@ class PtahClient(object):
                       'password': self._passwd}
         else:
             params = {'auth-token': self.authtkn}
-        
+
         status, data = self.transport.request(
             '%s/login'%self.path, params=params)
         if status != 200:
@@ -177,7 +177,7 @@ class Transport(object):
         else:
             request_body = ''
             headers = {}
-        
+
         for i in (0, 1):
             try:
                 return self.single_request(
@@ -202,7 +202,7 @@ class Transport(object):
             f_headers['Content-Type'] = 'application/x-www-form-urlencoded'
             #headers['Content-Length'] = len(request_body)
             f_headers.update(headers)
-            
+
             h.request("POST", handler, request_body, f_headers)
             response = h.getresponse(buffering=True)
             return self.parse_response(response)

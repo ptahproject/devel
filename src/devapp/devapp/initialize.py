@@ -21,7 +21,7 @@ class ApplicationPolicy(object):
     __parent__ = None
 
     __acls__ = ['simple-map', '']
-    
+
     __acl__ = ptah.ACLsProperty()
 
     __local_roles__ = {}
@@ -39,14 +39,14 @@ def initialize(ev):
 
     # mount cms to /second/
     pconfig.add_route(
-        'second-app', '/second/*traverse', 
+        'second-app', '/second/*traverse',
         factory = ptah_cms.ApplicationFactory(
             '/second/', 'second', 'Test subpath CMS'),
         use_global_views = True)
 
     # mount cms to /third/cms/
     pconfig.add_route(
-        'third-app', '/third/cms/*traverse', 
+        'third-app', '/third/cms/*traverse',
         factory = ptah_cms.ApplicationFactory(
             '/third/cms/', 'third-app', 'CMS'),
         use_global_views = True)
@@ -54,14 +54,14 @@ def initialize(ev):
     # mount cms to /cms/
     factory = ptah_cms.ApplicationFactory('/cms/', 'root', 'Ptah CMS')
     pconfig.add_route(
-        'root-app', '/cms/*traverse', 
+        'root-app', '/cms/*traverse',
         factory = factory, use_global_views = True)
 
     # mount same 'root' application to '/' location
     factory = ptah_cms.ApplicationFactory(
         '/', 'root', 'Ptah CMS', policy=ApplicationPolicy)
     pconfig.add_route(
-        'root-app2', '/*traverse', 
+        'root-app2', '/*traverse',
         factory = factory, use_global_views = True)
 
     # some more setup
