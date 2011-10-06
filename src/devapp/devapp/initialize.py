@@ -1,6 +1,6 @@
 """ custom config """
-from memphis import config, view
 from zope import interface
+from memphis import config, view
 
 import ptah, ptah_cms, ptah_app
 from ptah.crowd.provider import CrowdUser, Session
