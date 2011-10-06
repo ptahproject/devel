@@ -19,7 +19,5 @@ src/ptah
 src/ptah_cms
 src/ptah_app
 src/colander
-src/memphis.config
-src/memphis.form
-src/memphis.view
+src/memphis
 downloads/dist
