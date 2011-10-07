@@ -17,11 +17,10 @@ def contentEvent(ev):
         MSG.send('%s: %s'%(ev.__class__.__name__, ev.object.title))
 
 
-@config.subscriber(config.SettingsInitialized)
+@config.subscriber(config.ApplicationStarting)
 def initialized(ev):
     global MSG
-    if ev.config:
-        MSG = MSGService()
+    MSG = MSGService()
 
 @config.shutdownHandler
 def shutdown():
