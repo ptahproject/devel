@@ -7,6 +7,7 @@ requires = [
     'ptah_cms',
     'ptah_app',
     'poster',
+    'sqlalchemy_migrate',
 ]
 
 
