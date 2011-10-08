@@ -30,7 +30,7 @@ class ApplicationPolicy(object):
         self.request = request
 
 
-@config.subscriber(ptah.WSGIAppInitialized)
+@config.subscriber(ptah.AppInitialized)
 def initialize(ev):
     pconfig = ev.config
 
