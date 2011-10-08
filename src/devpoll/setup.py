@@ -1,13 +1,11 @@
 from setuptools import find_packages
 from setuptools import setup
 
-
 requires = [
     'ptah',
     'ptah_cms',
     'ptah_app',
 ]
-
 
 setup(
     name='devpoll',
