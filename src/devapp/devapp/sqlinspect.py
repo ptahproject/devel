@@ -1,14 +1,17 @@
+""" Very basic implementation for sql model migration """
+import logging
+import pyramid_sqla
 from sqlalchemy.engine import reflection
 
-import pyramid_sqla
 from memphis import config
 
 
 @config.subscriber(config.SettingsInitialized)
 def inspect(ev):
     engine = pyramid_sqla.get_engine()
-
     insp = reflection.Inspector.from_engine(engine)
+
+    log = logging.getLogger('ptah-sql-migration')
 
     missing = []
     md = pyramid_sqla.get_base().metadata
@@ -23,4 +26,5 @@ def inspect(ev):
         import migrate.changeset
 
     for cl in missing:
+        log.warning("Adding column '%s' to table '%s'", cl.name, cl.table.name)
         cl.create(cl.table, populate_default=True)
