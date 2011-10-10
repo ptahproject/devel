@@ -18,20 +18,18 @@ def link_view(context, request):
     can_edit = checkPermission(ptah_cms.ModifyContent, context, throw=False)
 
     if can_edit:
-        vform = form.DisplayForm(context, request)
+        vform = form.DisplayForm(context, request) # needs better UI
         vform.fields = Link.__type__.fieldset
         vform.update()
-        # this render() would display form html without layout
+        # the below render() would display form html without enclosing layout
         #return vform.render()
 
         """
-        this will render the display form with layout applied
+        this should render the display form with layout applied
         The layout is the "wrapping HTML" e.g. ptah_app layout you
         see at http://localhost:8080/
         """
-        
         layout = view.queryLayout(context, request, 'page')
         return layout(vform.render())
-    
 
     raise HTTPFound(location=context.href)
