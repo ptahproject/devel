@@ -10,8 +10,7 @@ view.registerRoute('show_models', '/show_models')
 
 @view.pyramidView(route='show_models')
 def show_models(request):
-    from ptah_cms import Session, Content
-    models = Session.query(Content).all()
+    models = ptah_cms.Session.query(ptah_cms.Content).all()
     return cgi.escape(str(models))
 
 @view.pyramidView('show_info', context=ptah_cms.Content)
