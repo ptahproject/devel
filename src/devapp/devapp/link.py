@@ -1,9 +1,8 @@
 import sqlalchemy as sqla
 from pyramid.httpexceptions import HTTPFound
-
-import ptah_cms
-from ptah import checkPermission
 from memphis import view, form
+from ptah import checkPermission
+import ptah_cms
 
 class Link(ptah_cms.Content):
     __tablename__ = 'ptah_cms_link'
