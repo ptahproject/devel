@@ -3,6 +3,7 @@
 import cgi
 from paste.httpserver import serve
 from memphis import view 
+import ptah
 import ptah_cms
 
 view.registerRoute('show_models', '/show_models')
@@ -35,6 +36,6 @@ if __name__ == '__main__':
         http://localhost:8080/list_children is traverser on context
         $resource_url/show_info on either folder or content.
     """
-    import ptah
+    #import ptah, will fix
     app = ptah.make_wsgi_app({'settings':r'./ptah.ini'})
     serve(app, host='0.0.0.0')
