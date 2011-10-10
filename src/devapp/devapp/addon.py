@@ -12,6 +12,8 @@ ADDONS = []
 @config.subscriber(config.SettingsInitialized)
 def initAddons(ev):
     dir = os.path.join(os.getcwd(), 'addons')
+    if not os.path.isdir(dir):
+        return
 
     for item in os.listdir(dir):
         path = os.path.join(dir, item)
