@@ -62,8 +62,9 @@ if __name__ == '__main__':
         $resource_url/show_info on either folder or content.
     """
     #import ptah, will fix
+    import repoze.tm
     app = ptah.make_wsgi_app({'settings':r'./ptah.ini'})
     from ptah import authentication
     authentication.checkers = []
 
-    serve(app, host='0.0.0.0')
+    serve(repoze.tm.TM(app), host='0.0.0.0')
