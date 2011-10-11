@@ -17,8 +17,6 @@ def make_app(global_config, **settings):
     config = Configurator(settings=settings)
     try:
         # This is magic land.
-        # intializing invokes a memphis scan of PYTHONPATH
-        # What I really want is to 
         ptah.initialize(None, config, global_config)
     except memphis.config.StopException:
         memphis.config.shutdown()
@@ -27,8 +25,11 @@ def make_app(global_config, **settings):
     # Pyramid
     app = config.make_wsgi_app()
 
+    # Using settings file; create database connections
+    # Then .create_all() schemas whose models are registered but tables do not
+
     Base = pyramid_sqla.get_base()
-    Base.metadata.create_all()
+    Base.metadata.create_all() 
 
     config.begin()
 
