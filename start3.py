@@ -25,10 +25,12 @@ class User(object):
         self.uri = '%s:%s' % (SCHEME, login)
         self.password = USERS.get(self.uri)
         self.login = login
-        
+        self.name = login
 
     @classmethod
     def get(cls, login):
+        login = login.split(':',1)[-1]
+        
         if USERS.get('%s:%s' % (SCHEME, login)):
             return User(login)
 
@@ -60,8 +62,9 @@ if __name__ == '__main__':
         $resource_url/show_info on either folder or content.
     """
     #import ptah, will fix
+    import repoze.tm
     app = ptah.make_wsgi_app({'settings':r'./ptah.ini'})
     from ptah import authentication
     authentication.checkers = []
 
-    serve(app, host='0.0.0.0')
+    serve(repoze.tm.TM(app), host='0.0.0.0')
