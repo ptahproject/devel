@@ -4,8 +4,6 @@ from setuptools import setup
 
 requires = [
     'ptah',
-    'ptah_cms',
-    'ptah_app',
     'poster',
     'sqlalchemy_migrate',
 ]
