@@ -30,7 +30,7 @@ class ApplicationPolicy(object):
         self.request = request
 
 
-@config.subscriber(ptah.AppInitialized)
+@config.subscriber(config.AppStarting)
 def initialize(ev):
     pconfig = ev.config
 
