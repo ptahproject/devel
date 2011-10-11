@@ -3,7 +3,7 @@ from zope import interface
 from memphis import config, view
 
 import ptah, ptah_cms, ptah_app
-from ptah.crowd.provider import CrowdUser, Session
+from ptah_crowd.provider import CrowdUser, Session
 from ptah_app.content.page import Page, AddPage
 from ptah_app.content.folder import Folder
 
