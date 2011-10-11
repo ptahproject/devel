@@ -1,11 +1,8 @@
 """ This is an example of security and URI resolver in 1 module. """
-
-import cgi
-from paste.httpserver import serve
-from zope import interface
-from memphis import view 
 import ptah
-import ptah_cms
+from memphis import view
+from paste.httpserver import serve
+from pyramid.config import Configurator
 
 # login name is a ptah.uri.Uri which means its prefixed with a scheme.
 # this is login, bobdobbs whose prefix is user+example.  
@@ -18,6 +15,7 @@ SCHEME = 'user+example'
 # Let's labotomize it.. oh wait, cant do it here ;-( must do it in __main__
 #from ptah import authentication
 #authentication.checkers = []
+
 
 class User(object):
 
@@ -36,8 +34,9 @@ class User(object):
 
     getByLogin = getById = get
 
+
 class UserProvider(object):
-    interface.implements(ptah.IAuthProvider)
+    """ simple auth provider """
 
     def authenticate(self, creds):
         login, password = creds['login'], creds['password']
@@ -46,6 +45,7 @@ class UserProvider(object):
             return user 
     def getPrincipalByLogin(self, login):
         return User(login)
+
 
 # registration
 @ptah.resolver('user+example', 'An example principal resolver')
@@ -61,10 +61,11 @@ if __name__ == '__main__':
         http://localhost:8080/list_children is traverser on context
         $resource_url/show_info on either folder or content.
     """
-    #import ptah, will fix
     import repoze.tm
-    app = ptah.make_wsgi_app({'settings':r'./ptah.ini'})
-    from ptah import authentication
-    authentication.checkers = []
+
+    config = Configurator(settings={'settings':r'./ptah.ini'})
+    config.include('ptah')
+    config.ptah_init()
+    app = config.make_wsgi_app()
 
     serve(repoze.tm.TM(app), host='0.0.0.0')
