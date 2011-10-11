@@ -25,10 +25,12 @@ class User(object):
         self.uri = '%s:%s' % (SCHEME, login)
         self.password = USERS.get(self.uri)
         self.login = login
-        
+        self.name = login
 
     @classmethod
     def get(cls, login):
+        login = login.split(':',1)[-1]
+        
         if USERS.get('%s:%s' % (SCHEME, login)):
             return User(login)
 
