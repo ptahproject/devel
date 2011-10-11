@@ -17,7 +17,7 @@ def contentEvent(ev):
         MSG.send('%s: %s'%(ev.__class__.__name__, ev.object.title))
 
 
-@config.subscriber(config.ApplicationStarting)
+@config.subscriber(config.AppStarting)
 def initialized(ev):
     global MSG
     MSG = MSGService()
