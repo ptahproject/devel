@@ -6,7 +6,7 @@ from sqlalchemy.engine import reflection
 from memphis import config
 
 
-#@config.subscriber(config.SettingsInitialized)
+@config.subscriber(config.SettingsInitialized)
 def inspect(ev):
     engine = pyramid_sqla.get_engine()
     insp = reflection.Inspector.from_engine(engine)

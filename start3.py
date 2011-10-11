@@ -61,11 +61,9 @@ if __name__ == '__main__':
         http://localhost:8080/list_children is traverser on context
         $resource_url/show_info on either folder or content.
     """
-    import repoze.tm
-
     config = Configurator(settings={'settings':r'./ptah.ini'})
     config.include('ptah')
     config.ptah_init()
     app = config.make_wsgi_app()
 
-    serve(repoze.tm.TM(app), host='0.0.0.0')
+    serve(app, host='0.0.0.0')
