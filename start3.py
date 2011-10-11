@@ -3,21 +3,14 @@ import ptah
 from memphis import view
 from paste.httpserver import serve
 
-# login name is a ptah.uri.Uri which means its prefixed with a scheme.
 # this is login, bobdobbs whose prefix is user+example.  
 # the default Ptah implementation is ptah.crowd.provider, scheme `user+crowd`
 
 USERS = {'user+example:bobdobbs':'aliens'}
 SCHEME = 'user+example'
 
-# Close your eyes.. checkers is hardwired?!
-# Let's labotomize it.. oh wait, cant do it here ;-( must do it in __main__
-#from ptah import authentication
-#authentication.checkers = []
-
-
 class User(object):
-
+    
     def __init__(self, login):
         self.uri = '%s:%s' % (SCHEME, login)
         self.password = USERS.get(self.uri)
@@ -35,13 +28,13 @@ class User(object):
 
 
 class UserProvider(object):
-    """ simple auth provider """
-
+    
     def authenticate(self, creds):
         login, password = creds['login'], creds['password']
         user = User.get(login)
         if user is not None:
             return user 
+            
     def getPrincipalByLogin(self, login):
         return User(login)
 
