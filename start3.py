@@ -2,7 +2,6 @@
 import ptah
 from memphis import view
 from paste.httpserver import serve
-from pyramid.config import Configurator
 
 # login name is a ptah.uri.Uri which means its prefixed with a scheme.
 # this is login, bobdobbs whose prefix is user+example.  
@@ -61,6 +60,8 @@ if __name__ == '__main__':
         http://localhost:8080/list_children is traverser on context
         $resource_url/show_info on either folder or content.
     """
+    from pyramid.config import Configurator
+
     config = Configurator(settings={'settings':r'./ptah.ini'})
     config.include('ptah')
     config.ptah_init()

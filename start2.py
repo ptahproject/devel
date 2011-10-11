@@ -36,5 +36,7 @@ if __name__ == '__main__':
         $resource_url/show_info on either folder or content.
     """
     import ptah
+    import start3
+
     app = ptah.make_wsgi_app({'settings':r'./ptah.ini'})
     serve(app, host='0.0.0.0')
