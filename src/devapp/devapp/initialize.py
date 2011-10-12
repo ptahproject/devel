@@ -10,8 +10,6 @@ from ptah_app.content.folder import Folder
 acl = ptah.ACL('simple-map', 'Simple permissions map')
 acl.allow(ptah.Everyone, AddPage)
 
-interface.classImplements(ptah_cms.ApplicationRoot, ptah_app.IPtahAppRoot)
-
 
 class ApplicationPolicy(object):
     interface.implements(ptah.ILocalRolesAware,
@@ -59,10 +57,8 @@ def initialize(ev):
 
     # mount same 'root' application to '/' location
     factory = ptah_cms.ApplicationFactory(
-        '/', 'root', 'Ptah CMS', policy=ApplicationPolicy)
-    pconfig.add_route(
-        'root-app2', '/*traverse',
-        factory = factory, use_global_views = True)
+        '/', 'root', 'Ptah CMS', policy=ApplicationPolicy, default_root=True)
+    pconfig.set_root_factory(factory)
 
     # some more setup
     root = factory(None)
