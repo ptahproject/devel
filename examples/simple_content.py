@@ -18,6 +18,6 @@ if __name__ == '__main__':
         import transaction; transaction.commit()
         
     for link in ptah_cms.Session.query(Hyperlink).all():
-        print 'curl http://localhost:8080/__rest__/cms/content/%s' % link.__uri__
+        print 'curl http://localhost:8080/__rest__/cms/content:/%s' % link.__uri__
         
     serve(app, host='0.0.0.0')
