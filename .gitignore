@@ -13,6 +13,7 @@ var/*
 *.pt.py
 *.pt.pyc
 .DS_Store
+db.sqlite
 source
 src/docs
 src/ptah
