@@ -1,5 +1,4 @@
 """ This is an example of useing form (imperative style). """
-import cgi
 import ptah, ptah_cms
 from pprint import pprint
 from paste.httpserver import serve
