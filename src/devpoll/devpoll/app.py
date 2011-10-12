@@ -16,7 +16,7 @@ class PollApplicationPolicy(ptah_cms.ApplicationPolicy):
 
 
 class PollApplication(ptah_cms.Container):
-    interface.implements(ptah_app.IPtahAppRoot)
+    #interface.implements(ptah_app.IPtahAppRoot)
 
     __name__ = ''
 

@@ -6,7 +6,7 @@ import ptah_app.views
 from memphis import view
 
 
-view.registerLayout('page', ptah_app.IPtahAppRoot, layer='devapp',
+view.registerLayout('page', ptah_cms.ApplicationRoot, layer='devapp',
                     template = view.template('templates/layoutpage.pt'))
 
 view.registerLayout('page', view.INavigationRoot, layer='devapp',
