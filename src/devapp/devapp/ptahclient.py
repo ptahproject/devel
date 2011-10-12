@@ -203,7 +203,18 @@ class Transport(object):
             #headers['Content-Length'] = len(request_body)
             f_headers.update(headers)
 
-            h.request("POST", handler, request_body, f_headers)
+            headers = {}
+            for key, val in f_headers.items():
+                if type(key) is unicode:
+                    key = key.encode('utf-8')
+                if type(val) is val:
+                    val = val.encode('utf-8')
+                headers[key] = val
+
+            if type(request_body) is unicode:
+                request_body = request_body.encode('utf-8')
+
+            h.request("POST", handler.encode('utf-8'), request_body, headers)
             response = h.getresponse(buffering=True)
             return self.parse_response(response)
         except Exception:

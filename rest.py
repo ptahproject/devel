@@ -34,4 +34,4 @@ fileType = server.types['file']
 cms.create(fileType, 'repoze.gif', 
            title = 'Test file',
            description = '',
-           data = open('repoze.gif', 'rb'))
+           blobref = open('repoze.gif', 'rb'))
