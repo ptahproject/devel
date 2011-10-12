@@ -17,8 +17,7 @@ def link_view(context, request):
         If you have permission to edit it it will display the form.
         If you do not have ability to edit it; you will be redirected.
     """
-    can_edit = ptah.checkPermission(
-        ptah_cms.ModifyContent, context, throw=False)
+    can_edit = ptah.checkPermission(ptah_cms.ModifyContent, context)
 
     if can_edit:
         vform = form.DisplayForm(context, request) # needs better UI
