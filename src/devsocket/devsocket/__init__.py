@@ -2,6 +2,7 @@
 
 import ptah_app
 import ptah_app.views
+import ptah_cms
 
 from memphis import view
 
