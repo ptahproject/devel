@@ -39,7 +39,7 @@ if __name__ == '__main__':
     foo = FOO() #factory() vs. factory(None)?
     
     #Detour. We need a security context since ptah_cms.Container.create has security
-    #ptah.authService.setUserId('runyaga')
+    #ptah.authService.set_userid('runyaga')
     
     from ptah_app.content import Page
     # We can use the Container API
