@@ -1,4 +1,4 @@
-""" This is an example of running Ptah in 1 module. """
+""" A route and 2 views for Content """
 
 import cgi
 from paste.httpserver import serve
