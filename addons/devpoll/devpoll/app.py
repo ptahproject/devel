@@ -15,8 +15,7 @@ class PollApplicationPolicy(ptah_cms.ApplicationPolicy):
     __acl__ = APP_ACL
 
 
-class PollApplication(ptah_cms.Container):
-    #interface.implements(ptah_app.IPtahAppRoot)
+class PollApplication(ptah_cms.ApplicationRoot):
 
     __name__ = ''
 
