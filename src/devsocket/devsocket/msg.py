@@ -22,7 +22,7 @@ def initialized(ev):
     global MSG
     MSG = MSGService()
 
-@config.shutdownHandler
+@config.shutdown_handler
 def shutdown():
     global MSG
     if MSG is not None:
