@@ -8,7 +8,7 @@
         ${view.include('socket.io')}
         ${view.include('sticky.min.css')}
         ${view.include('sticky.min.js')}
-        <tal:block content="structure view.renderIncludes()" />
+        <tal:block content="structure view.render_includes()" />
     </head>
 
     <body>
