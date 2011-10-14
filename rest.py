@@ -31,7 +31,7 @@ content.update(title = 'Test page modified',
 
 fileType = server.types['file']
 
-cms.create(fileType, 'repoze.gif', 
-           title = 'Test file',
+cms.create(fileType, 'python-logo.gif', 
+           title = 'Python logo',
            description = '',
-           blobref = open('repoze.gif', 'rb'))
+           blobref = open('python-logo.gif', 'rb'))
