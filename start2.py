@@ -5,18 +5,18 @@ from paste.httpserver import serve
 from memphis import view 
 import ptah_cms
 
-view.registerRoute('show_models', '/show_models')
+view.register_route('show_models', '/show_models')
 
-@view.pyramidView(route='show_models')
+@view.pyramidview(route='show_models')
 def show_models(request):
     models = ptah_cms.Session.query(ptah_cms.Content).all()
     return cgi.escape(str(models))
 
-@view.pyramidView('show_info', context=ptah_cms.Content)
+@view.pyramidview('show_info', context=ptah_cms.Content)
 def show_info(context, request):
     return cgi.escape(str(context.info()))
     
-@view.pyramidView('list_children', context=ptah_cms.Container)
+@view.pyramidview('list_children', context=ptah_cms.Container)
 def list_children(context, request):
     out = []
     for name, child in context.items():

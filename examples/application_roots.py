@@ -9,7 +9,7 @@ import ptah_cms
 FOO = ptah_cms.ApplicationFactory(
     '/foo', 'foo', 'Foo Application')
 
-view.registerRoute(
+view.register_route(
     'foo', '/foo/*traverse', factory = FOO, use_global_views = True)
 
 if __name__ == '__main__':

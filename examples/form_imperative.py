@@ -6,7 +6,7 @@ from pyramid.httpexceptions import HTTPFound
 from memphis import view, form
 
 
-@view.pyramidView('test-form.html', context=ptah_cms.Content)
+@view.pyramidview('test-form.html', context=ptah_cms.Content)
 def form_view(context, request):
 
     myform = form.Form(context, request)
@@ -64,7 +64,7 @@ def form_view(context, request):
     res = myform.render()
 
     # optional, render form in layout
-    layout = view.queryLayout(request, context)
+    layout = view.query_layout(request, context)
     return layout(res)
 
 

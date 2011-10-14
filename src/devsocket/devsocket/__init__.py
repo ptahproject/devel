@@ -7,11 +7,11 @@ import ptah_cms
 from memphis import view
 
 
-view.registerLayout('page', ptah_cms.ApplicationRoot, layer='devapp',
-                    template = view.template('templates/layoutpage.pt'))
+view.register_layout('page', ptah_cms.ApplicationRoot, layer='devapp',
+                     template = view.template('templates/layoutpage.pt'))
 
-view.registerLayout('page', view.INavigationRoot, layer='devapp',
-                    template = view.template('templates/layoutpage.pt'))
+view.register_layout('page', view.INavigationRoot, layer='devapp',
+                     template = view.template('templates/layoutpage.pt'))
 
 
 view.static('socketio', 'devsocket:socketio/')

@@ -3,10 +3,10 @@ from memphis import view
 
 import app
 
-view.registerRoute(
+view.register_route(
     'devpoll-poll-view', '/polls/{id}/',
     app.pollAppFactory)
 
-view.registerRoute(
+view.register_route(
     'devpoll-application', '/polls/*traverse',
     app.pollAppFactory, use_global_views = True)

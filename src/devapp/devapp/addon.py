@@ -32,7 +32,7 @@ class AddonModule(ptah.PtahModule):
 
 
 class AddonView(view.View):
-    view.pyramidView(
+    view.pyramidview(
         context = AddonModule,
         template = view.template('addon.pt'))
 

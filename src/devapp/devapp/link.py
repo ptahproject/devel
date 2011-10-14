@@ -11,7 +11,7 @@ class Link(ptah_cms.Content):
     href = sqla.Column(sqla.Unicode)
 
 
-@view.pyramidView(context=Link, permission=ptah_cms.View)
+@view.pyramidview(context=Link, permission=ptah_cms.View)
 def link_view(context, request):
     """ This is a default view for a Link model.
         If you have permission to edit it it will display the form.
@@ -35,7 +35,7 @@ def link_view(context, request):
         The layout is the "wrapping HTML" e.g. ptah_app layout you
         see at http://localhost:8080/
         """
-        layout = view.queryLayout(request, context)
+        layout = view.query_layout(request, context)
         return layout(vform.render())
 
     raise HTTPFound(location=context.href)
