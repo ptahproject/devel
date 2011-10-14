@@ -24,7 +24,7 @@ class User(object):
         if USERS.get('%s:%s' % (SCHEME, login)):
             return User(login)
 
-    getByLogin = getById = get
+    get_bylogin = get_byuri = get
 
 
 class UserProvider(object):
