@@ -31,12 +31,12 @@ class MyForm(form.Form):
         )
 
     # form default values
-    def getContent(self):
+    def form_content(self):
         return {'title': self.context.title,
                 'description': self.context.description}
 
     @form.button('Update')
-    def updateAction(self):
+    def update_handler(self):
         data, errors = self.extract()
 
         if errors:
@@ -51,7 +51,7 @@ class MyForm(form.Form):
         raise HTTPFound(location='.')
     
     @form.button('Cancel')
-    def cancelAction(self):
+    def cancel_handler(self):
         raise HTTPFound(location='.')
 
 

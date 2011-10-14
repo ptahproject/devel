@@ -50,8 +50,8 @@ def form_view(context, request):
         form.message('Content has been updated.', 'info')
         raise HTTPFound(location='.')
         
-    myform.buttons.addAction('Update', action=updateAction)
-    myform.buttons.addAction('Cancel', action=cancelAction)
+    myform.buttons.add_action('Update', action=updateAction)
+    myform.buttons.add_action('Cancel', action=cancelAction)
 
     # form default values
     myform.content = {'title': context.title,

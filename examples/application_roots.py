@@ -14,13 +14,14 @@ view.registerRoute(
 
 if __name__ == '__main__':
     app = ptah.make_wsgi_app({'settings':r'./ptah.ini'})
-
-    request = Request.blank('/')
-    foo = FOO()
+    request = Request.blank('/') # all pyramid requests have a root
+    foo = FOO() 
     request.root = foo
     request.registry = app.registry
 
     from ptah_app.content import Page
+    
+    # Only using the API all events will notify
     if 'page1' not in foo:
         page1 = foo.create(Page.__type__.__uri__, 'page1', 
                            text='<p> some html</p>')
