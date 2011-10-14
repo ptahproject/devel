@@ -2,10 +2,10 @@
 import ptah, ptah_cms
 from paste.httpserver import serve
 
-from ptah_cms import restAction, View, ModifyContent
+from ptah_cms import restaction, View, ModifyContent
 
 
-@restAction('extra-info', ptah_cms.Content, permission=View)
+@restaction('extra-info', ptah_cms.Content, permission=View)
 def extraInfo(content, request):
     """ __doc__ is used for action description """
     
@@ -14,7 +14,7 @@ def extraInfo(content, request):
             'message': 'Ptah rest api'}
 
 
-@restAction('protected-info', ptah_cms.Content, permission=ModifyContent)
+@restaction('protected-info', ptah_cms.Content, permission=ModifyContent)
 def protectedInfo(content, request):
     """ protected rest action """
     
