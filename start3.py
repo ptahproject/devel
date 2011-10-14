@@ -28,14 +28,14 @@ class User(object):
 
 
 class UserProvider(object):
-    
+
     def authenticate(self, creds):
         login, password = creds['login'], creds['password']
         user = User.get(login)
         if user is not None:
             return user 
-            
-    def getPrincipalByLogin(self, login):
+
+    def get_principal_bylogin(self, login):
         return User(login)
 
 
@@ -44,7 +44,7 @@ class UserProvider(object):
 def getPrincipal(uri):
     return User.get(uri)
 
-ptah.registerProvider('example', UserProvider())
+ptah.register_auth_provider('example', UserProvider())
 
  
 if __name__ == '__main__':
