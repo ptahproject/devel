@@ -10,9 +10,6 @@ from memphis import view
 view.register_layout('page', ptah_cms.ApplicationRoot, layer='devapp',
                      template = view.template('templates/layoutpage.pt'))
 
-view.register_layout('page', view.INavigationRoot, layer='devapp',
-                     template = view.template('templates/layoutpage.pt'))
-
 
 view.static('socketio', 'devsocket:socketio/')
 view.library(

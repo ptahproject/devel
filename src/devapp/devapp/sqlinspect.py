@@ -1,6 +1,6 @@
 """ Very basic implementation for sql model migration """
 import logging
-import pyramid_sqla
+import sqlahelper
 from sqlalchemy.engine import reflection
 
 from memphis import config
@@ -8,13 +8,13 @@ from memphis import config
 
 @config.subscriber(config.AppStarting)
 def inspect(ev):
-    engine = pyramid_sqla.get_engine()
+    engine = sqlahelper.get_engine()
     insp = reflection.Inspector.from_engine(engine)
 
     log = logging.getLogger('ptah-sql-migration')
 
     missing = []
-    md = pyramid_sqla.get_base().metadata
+    md = sqlahelper.get_base().metadata
     for name, table in md.tables.items():
         names = [rec['name'] for rec in insp.get_columns(name)]
 
