@@ -1,6 +1,6 @@
 """ This is an example of layouts """
 from paste.httpserver import serve
-from memphis import view 
+from ptah import view 
 import ptah_cms
 
 

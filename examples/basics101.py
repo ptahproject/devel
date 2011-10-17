@@ -2,7 +2,7 @@
 
 import cgi
 from paste.httpserver import serve
-from memphis import view 
+from ptah import view 
 import ptah_cms
 
 view.register_route('show_models', '/show_models')

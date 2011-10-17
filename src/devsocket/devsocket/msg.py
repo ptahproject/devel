@@ -3,7 +3,7 @@ import sys, logging, time
 import Queue, httplib, urlparse, urllib, threading, socket
 
 import ptah, ptah_cms
-from memphis import config
+from ptah import config
 
 logger = logging.getLogger('devsocket')
 

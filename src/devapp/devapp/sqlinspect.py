@@ -3,7 +3,7 @@ import logging
 import sqlahelper
 from sqlalchemy.engine import reflection
 
-from memphis import config
+from ptah import config
 
 
 @config.subscriber(config.AppStarting)

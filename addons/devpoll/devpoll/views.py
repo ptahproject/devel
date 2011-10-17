@@ -1,5 +1,5 @@
 import ptah_cms
-from memphis import config, view, form
+from ptah import config, view, form
 from pyramid.httpexceptions import HTTPFound
 
 import app

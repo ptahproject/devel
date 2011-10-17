@@ -2,7 +2,7 @@ from paste.httpserver import serve
 import sqlalchemy as sqla
 from pyramid.request import Request
 
-from memphis import config, view
+from ptah import config, view
 import ptah
 import ptah_cms
 

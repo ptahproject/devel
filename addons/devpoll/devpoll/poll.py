@@ -2,7 +2,7 @@
 import ptah
 import ptah_cms
 import sqlalchemy as sqla
-from memphis import config, form
+from ptah import config, form
 
 import permissions
 

@@ -3,7 +3,7 @@ import ptah, ptah_cms
 from pprint import pprint
 from paste.httpserver import serve
 from pyramid.httpexceptions import HTTPFound
-from memphis import view, form
+from ptah import view, form
 
 
 class MyForm(form.Form):

@@ -26,7 +26,7 @@ setup(
     zip_safe=False,
     install_requires = requires,
     entry_points = {
-        'memphis': ['package = devapp'],
+        'ptah': ['package = devapp'],
         'console_scripts': [
             'socket-server = devsocket.server:main',
         ],

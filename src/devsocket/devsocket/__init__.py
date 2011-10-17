@@ -4,7 +4,7 @@ import ptah_app
 import ptah_app.views
 import ptah_cms
 
-from memphis import view
+from ptah import view
 
 
 view.register_layout('page', ptah_cms.ApplicationRoot, layer='devapp',

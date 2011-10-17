@@ -1,6 +1,6 @@
 """ This is an example of security and URI resolver in 1 module. """
 import ptah
-from memphis import view
+from ptah import view
 from paste.httpserver import serve
 
 # this is login, bobdobbs whose prefix is user+example.  

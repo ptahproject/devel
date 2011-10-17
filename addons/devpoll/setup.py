@@ -19,6 +19,6 @@ setup(
     zip_safe=False,
     install_requires = requires,
     entry_points = {
-        'memphis': ['package = devpoll'],
+        'ptah': ['package = devpoll'],
     },
 )
