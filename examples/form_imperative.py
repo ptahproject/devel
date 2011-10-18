@@ -6,7 +6,7 @@ from pyramid.httpexceptions import HTTPFound
 from ptah import view, form, cms
 
 
-@view.pyramidview('test-form.html', context=cms.Content)
+@view.pview('test-form.html', context=cms.Content)
 def form_view(context, request):
 
     myform = form.Form(context, request)

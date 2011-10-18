@@ -7,7 +7,7 @@ from ptah import cms, view, form
 
 
 class MyForm(form.Form):
-    view.pyramidview('test-form.html', context=cms.Content)
+    view.pview('test-form.html', context=cms.Content)
 
     # define fields for form
     fields = form.Fieldset(

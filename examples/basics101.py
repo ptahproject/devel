@@ -7,16 +7,16 @@ from ptah import view, cms
 
 view.register_route('show_models', '/show_models')
 
-@view.pyramidview(route='show_models')
+@view.pview(route='show_models')
 def show_models(request):
     models = cms.Session.query(cms.Content).all()
     return cgi.escape(str(models))
 
-@view.pyramidview('show_info', context=cms.Content)
+@view.pview('show_info', context=cms.Content)
 def show_info(context, request):
     return cgi.escape(str(context.info()))
     
-@view.pyramidview('list_children', context=cms.Container)
+@view.pview('list_children', context=cms.Container)
 def list_children(context, request):
     out = []
     for name, child in context.items():

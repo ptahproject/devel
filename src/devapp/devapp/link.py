@@ -11,7 +11,7 @@ class Link(cms.Content):
     href = sqla.Column(sqla.Unicode)
 
 
-@view.pyramidview(context=Link, permission=cms.View)
+@view.pview(context=Link, permission=cms.View)
 def link_view(context, request):
     """ This is a default view for a Link model.
         If you have permission to edit it it will display the form.

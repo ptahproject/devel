@@ -8,7 +8,7 @@ import permissions
 
 
 class AddPollForm(form.Form):
-    view.pyramidview('addpoll.html', app.PollApplication)
+    view.pview('addpoll.html', app.PollApplication)
 
     label = 'Add new poll'
     fields = poll.Poll.__type__.fieldset
@@ -32,18 +32,18 @@ class AddPollForm(form.Form):
 
 
 class ApplicationView(view.View):
-    view.pyramidview(context = app.PollApplication,
-                     permission = ptah_cms.View,
-                     template = view.template('templates/app.pt'))
+    view.pview(context = app.PollApplication,
+               permission = ptah_cms.View,
+               template = view.template('templates/app.pt'))
 
     def update(self):
         self.polls = self.context.values()
 
 
 class PollView(view.View):
-    view.pyramidview(route = 'devpoll-poll-view',
-                     context = app.PollApplication,
-                     template = view.template('templates/poll.pt'))
+    view.pview(route = 'devpoll-poll-view',
+               context = app.PollApplication,
+               template = view.template('templates/poll.pt'))
 
     def update(self):
         self.poll = poll.Poll.get(self.request.matchdict['id'])
