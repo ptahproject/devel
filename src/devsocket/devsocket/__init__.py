@@ -1,13 +1,9 @@
 # devapp
 
-import ptah_app
-import ptah_app.views
-import ptah_cms
-
-from ptah import view
+from ptah import cms, view
 
 
-view.register_layout('page', ptah_cms.ApplicationRoot, layer='devapp',
+view.register_layout('page', cms.ApplicationRoot, layer='devapp',
                      template = view.template('templates/layoutpage.pt'))
 
 

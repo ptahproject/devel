@@ -2,10 +2,10 @@
 from zope import interface
 from ptah import config, view
 
-import ptah, ptah_cms, ptah_app
-from ptah_crowd.provider import CrowdUser, Session
-from ptah_app.content.page import Page, AddPage
-from ptah_app.content.folder import Folder
+import ptah, ptah.cmsapp
+from ptah.crowd.provider import CrowdUser, Session
+from ptah.cmsapp.content.page import Page, AddPage
+from ptah.cmsapp.content.folder import Folder
 
 acl = ptah.ACL('simple-map', 'Simple permissions map')
 acl.allow(ptah.Everyone, AddPage)
@@ -13,7 +13,7 @@ acl.allow(ptah.Everyone, AddPage)
 
 class ApplicationPolicy(object):
     interface.implements(ptah.ILocalRolesAware,
-                         ptah_cms.IApplicationPolicy)
+                         ptah.cms.IApplicationPolicy)
 
     __name__ = ''
     __parent__ = None
@@ -38,25 +38,25 @@ def initialize(ev):
     # mount cms to /second/
     pconfig.add_route(
         'second-app', '/second/*traverse',
-        factory = ptah_cms.ApplicationFactory(
+        factory = ptah.cms.ApplicationFactory(
             '/second/', 'second', 'Test subpath CMS'),
         use_global_views = True)
 
     # mount cms to /third/cms/
     pconfig.add_route(
         'third-app', '/third/cms/*traverse',
-        factory = ptah_cms.ApplicationFactory(
+        factory = ptah.cms.ApplicationFactory(
             '/third/cms/', 'third-app', 'CMS'),
         use_global_views = True)
 
     # mount cms to /cms/
-    factory = ptah_cms.ApplicationFactory('/cms/', 'root', 'Ptah CMS')
+    factory = ptah.cms.ApplicationFactory('/cms/', 'root', 'Ptah CMS')
     pconfig.add_route(
         'root-app', '/cms/*traverse',
         factory = factory, use_global_views = True)
 
     # mount same 'root' application to '/' location
-    factory = ptah_cms.ApplicationFactory(
+    factory = ptah.cms.ApplicationFactory(
         '/', 'root', 'Ptah CMS', policy=ApplicationPolicy, default_root=True)
     pconfig.set_root_factory(factory)
 
@@ -84,7 +84,7 @@ def initialize(ev):
             view.path('devapp:welcome.pt')[0], 'rb').read()
 
         Session.add(page)
-        config.notify(ptah_cms.events.ContentCreatedEvent(page))
+        config.notify(ptah.cms.events.ContentCreatedEvent(page))
 
         root['front-page'] = page
 
@@ -93,14 +93,14 @@ def initialize(ev):
         folder = Folder(title='Test folder')
         root['folder'] = folder
         Session.add(folder)
-        config.notify(ptah_cms.events.ContentCreatedEvent(folder))
+        config.notify(ptah.cms.events.ContentCreatedEvent(folder))
 
         page = Page(title=u'Welcome to Ptah')
         page.text = open(
             view.path('devapp:welcome.pt')[0], 'rb').read()
 
         Session.add(page)
-        config.notify(ptah_cms.events.ContentCreatedEvent(page))
+        config.notify(ptah.cms.events.ContentCreatedEvent(page))
 
         folder['front-page'] = page
 

@@ -2,15 +2,15 @@
 import sys, logging, time
 import Queue, httplib, urlparse, urllib, threading, socket
 
-import ptah, ptah_cms
-from ptah import config
+import ptah
+from ptah import cms, config
 
 logger = logging.getLogger('devsocket')
 
 MSG = None
 
 
-@config.subscriber(ptah_cms.ContentEvent)
+@config.subscriber(cms.ContentEvent)
 def contentEvent(ev):
     global MSG
     if MSG is not None:

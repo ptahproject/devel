@@ -4,7 +4,7 @@ from zope import interface
 
 import ptah
 import ptah_cms
-import ptah_app
+import ptah.cmsapp
 
 from poll import Poll
 from permissions import APP_ACL

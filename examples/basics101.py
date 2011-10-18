@@ -2,25 +2,25 @@
 
 import cgi
 from paste.httpserver import serve
-from ptah import view 
-import ptah_cms
+from ptah import view, cms
+
 
 view.register_route('show_models', '/show_models')
 
 @view.pyramidview(route='show_models')
 def show_models(request):
-    models = ptah_cms.Session.query(ptah_cms.Content).all()
+    models = cms.Session.query(cms.Content).all()
     return cgi.escape(str(models))
 
-@view.pyramidview('show_info', context=ptah_cms.Content)
+@view.pyramidview('show_info', context=cms.Content)
 def show_info(context, request):
     return cgi.escape(str(context.info()))
     
-@view.pyramidview('list_children', context=ptah_cms.Container)
+@view.pyramidview('list_children', context=cms.Container)
 def list_children(context, request):
     out = []
     for name, child in context.items():
-        if isinstance(child, ptah_cms.Container):
+        if isinstance(child, cms.Container):
             href = '<a href="%slist_children">%s</a>' #XXX extra /?
             href = href % (request.resource_url(child), child.title)
         else:

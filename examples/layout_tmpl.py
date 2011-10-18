@@ -1,15 +1,14 @@
 """ This is an example of layouts """
 from paste.httpserver import serve
-from ptah import view 
-import ptah_cms
+from ptah import view, cms
 
 
 class PageLayout(view.Layout):
-    view.layout('page', ptah_cms.ApplicationRoot,
+    view.layout('page', cms.ApplicationRoot,
                 layer = 'test',
                 template = view.template('templates/layoutpage.pt'))
 
-    """ override 'page' layout from ptah_app
+    """ override 'page' layout from ptah.cmsapp
 
     layer - identifier, import order does matter, last imported wins
     """
@@ -30,7 +29,7 @@ class PageLayout(view.Layout):
 
 
 class WorkspaceLayout(view.Layout):
-    view.layout('workspace', ptah_cms.ApplicationRoot,
+    view.layout('workspace', cms.ApplicationRoot,
                 parent = 'page',
                 layer = 'test',
                 template = view.template('templates/layoutworkspace.pt'))

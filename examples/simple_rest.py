@@ -1,8 +1,9 @@
 """ This is an example of useing form (imperative style). """
-import ptah, ptah_cms
 from paste.httpserver import serve
 
-from ptah_cms import restaction, View, ModifyContent
+import ptah
+from ptah import cms
+from ptah.cms import restaction, View, ModifyContent
 
 
 @restaction('extra-info', ptah_cms.Content, permission=View)

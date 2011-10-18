@@ -1,12 +1,12 @@
 """ This is an example of useing form (imperative style). """
-import ptah, ptah_cms
+import ptah
 from pprint import pprint
 from paste.httpserver import serve
 from pyramid.httpexceptions import HTTPFound
-from ptah import view, form
+from ptah import view, form, cms
 
 
-@view.pyramidview('test-form.html', context=ptah_cms.Content)
+@view.pyramidview('test-form.html', context=cms.Content)
 def form_view(context, request):
 
     myform = form.Form(context, request)
