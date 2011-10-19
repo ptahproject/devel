@@ -4,8 +4,9 @@ from ptah import config, view
 
 import ptah, ptah.cmsapp
 from ptah.crowd.provider import CrowdUser, Session
-from ptah.cmsapp.content.page import Page, AddPage
-from ptah.cmsapp.content.folder import Folder
+
+from devapp.content.page import Page, AddPage
+from devapp.content.folder import Folder
 
 acl = ptah.ACL('simple-map', 'Simple permissions map')
 acl.allow(ptah.Everyone, AddPage)
