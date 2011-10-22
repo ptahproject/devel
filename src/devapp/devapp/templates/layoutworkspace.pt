@@ -6,7 +6,7 @@
       <tal:block tal:condition="not view.isAnon">
 	<ul class="nav secondary-nav">
 	  <li>
-	    <h5 class="active">
+	    <h5>
 	      <a href="${root_url}">
   		${view.user.name or view.user.login}:
 	      </a>
