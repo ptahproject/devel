@@ -12,6 +12,13 @@ acl = ptah.ACL('simple-map', 'Simple permissions map')
 acl.allow(ptah.Everyone, AddPage)
 
 
+class ApplicationRoot(ptah.cms.ApplicationRoot):
+
+    __type__ = ptah.cms.Type(
+        'app', 'Application',
+        description = 'Default ptah application')
+
+
 class ApplicationPolicy(object):
     interface.implements(ptah.ILocalRolesAware,
                          ptah.cms.IApplicationPolicy)
@@ -40,25 +47,27 @@ def initialize(ev):
     pconfig.add_route(
         'second-app', '/second/*traverse',
         factory = ptah.cms.ApplicationFactory(
-            '/second/', 'second', 'Test subpath CMS'),
+            ApplicationRoot, '/second/', 'second', 'Test subpath CMS'),
         use_global_views = True)
 
     # mount cms to /third/cms/
     pconfig.add_route(
         'third-app', '/third/cms/*traverse',
         factory = ptah.cms.ApplicationFactory(
-            '/third/cms/', 'third-app', 'CMS'),
+            ApplicationRoot, '/third/cms/', 'third-app', 'CMS'),
         use_global_views = True)
 
     # mount cms to /cms/
-    factory = ptah.cms.ApplicationFactory('/cms/', 'root', 'Ptah CMS')
+    factory = ptah.cms.ApplicationFactory(
+        ApplicationRoot, '/cms/', 'root', 'Ptah CMS')
     pconfig.add_route(
         'root-app', '/cms/*traverse',
         factory = factory, use_global_views = True)
 
     # mount same 'root' application to '/' location
     factory = ptah.cms.ApplicationFactory(
-        '/', 'root', 'Ptah CMS', policy=ApplicationPolicy, default_root=True)
+        ApplicationRoot, '/', 'root', 'Ptah CMS', 
+        policy=ApplicationPolicy, default_root=True)
     pconfig.set_root_factory(factory)
 
     # some more setup
