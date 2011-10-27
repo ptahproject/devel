@@ -19,6 +19,6 @@ setup(
     zip_safe=False,
     install_requires = requires,
     entry_points = {
-        'ptah': ['package = devpoll'],
+        'ptah': ['addon = devpoll'],
     },
 )
