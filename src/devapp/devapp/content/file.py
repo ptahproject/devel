@@ -2,12 +2,12 @@
 import sqlalchemy as sqla
 from ptah import view, form
 
-import ptah, ptah.cmsapp
+import ptah
 from ptah import cms
 from devapp.permissions import AddFile
 
 
-class File(ptah.cms.Content):
+class File(cms.Content):
 
     __tablename__ = 'ptah_cmsapp_files'
 
@@ -89,7 +89,7 @@ class FileView(FileDownloadView):
         return super(FileView, self).render()
 
 
-class FileAddForm(ptah.cmsapp.AddForm):
+class FileAddForm(cms.AddForm):
     view.pview('addfile.html', cms.Container)
 
     tinfo = File.__type__

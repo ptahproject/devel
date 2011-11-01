@@ -2,7 +2,7 @@
 from zope import interface
 from ptah import config, view
 
-import ptah, ptah.cmsapp
+import ptah
 from ptah.crowd.provider import CrowdUser, Session
 
 from devapp.content.page import Page, AddPage

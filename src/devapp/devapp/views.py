@@ -7,9 +7,6 @@ from ptah import authService, manage
 from ptah import cms
 from ptah.cms import tinfo, interfaces, events
 
-from ptah.cmsapp import AddForm
-from ptah.cmsapp import list_uiactions
-
 
 view.register_layout(
     'page', cms.ApplicationRoot,
@@ -36,7 +33,7 @@ class ContentLayout(view.Layout):
                 template=view.template("templates/layoutcontent.pt"))
 
     def update(self):
-        self.actions = list_uiactions(self.context, self.request)
+        self.actions = cms.list_uiactions(self.context, self.request)
 
 
 class DefaultContentView(form.DisplayForm):
@@ -55,3 +52,7 @@ class DefaultContentView(form.DisplayForm):
             data[name] = getattr(self.context, name, field.default)
 
         return data
+
+
+class DefaultEditForm(cms.EditForm):
+    view.pview('edit.html', cms.Content, permission=cms.ModifyContent)
