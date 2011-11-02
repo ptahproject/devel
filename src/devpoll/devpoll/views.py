@@ -1,4 +1,4 @@
-import ptah_cms
+import ptah
 from ptah import config, view, form
 from pyramid.httpexceptions import HTTPFound
 
@@ -22,8 +22,8 @@ class AddPollForm(form.Form):
             return
 
         p = poll.Poll(**data)
-        ptah_cms.Session.add(p)
-        ptah_cms.Session.flush()
+        ptah.cms.Session.add(p)
+        ptah.cms.Session.flush()
         raise HTTPFound(location='%s/'%p.__id__)
 
     @form.button(u'Cancel')
@@ -33,7 +33,7 @@ class AddPollForm(form.Form):
 
 class ApplicationView(view.View):
     view.pview(context = app.PollApplication,
-               permission = ptah_cms.View,
+               permission = ptah.cms.View,
                template = view.template('templates/app.pt'))
 
     def update(self):

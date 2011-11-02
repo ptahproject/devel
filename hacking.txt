@@ -19,10 +19,10 @@ Ptah dev
 
 5. List application settings
 
-   >> ./bin/paster settings -a
-   >> ./bin/paster settings -l mail
-   >> ./bin/paster settings -p
-   
+   >> ./bin/settings -a
+   >> ./bin/settings -l mail
+   >> ./bin/settings -p
+
 6. Application template customizations
 
    >> ./bin/paster templates -h

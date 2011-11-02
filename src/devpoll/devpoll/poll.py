@@ -1,13 +1,12 @@
 """ poll """
 import ptah
-import ptah_cms
 import sqlalchemy as sqla
 from ptah import config, form
 
 import permissions
 
 
-class Poll(ptah_cms.Node):
+class Poll(ptah.cms.Node):
 
     __tablename__ = 'devapp_polls'
     __id__ = sqla.Column(
@@ -28,13 +27,13 @@ class Poll(ptah_cms.Node):
         info = {'field': form.LinesField('choices', title = 'Choices')}
         )
 
-    __type__ = ptah_cms.Type(
+    __type__ = ptah.cms.Type(
         'devpoll-poll', 'Poll',
         add = 'addpoll.html',
         permission = permissions.AddPoll)
 
     _sql_get = ptah.QueryFreezer(
-        lambda: ptah_cms.Session.query(Poll)\
+        lambda: ptah.cms.Session.query(Poll)\
             .filter(Poll.__id__ == sqla.sql.bindparam('id')))
 
     @classmethod

@@ -1,36 +1,33 @@
 """ poll application """
+import ptah
 import sqlalchemy as sqla
 from zope import interface
-
-import ptah
-import ptah_cms
-import ptah.cmsapp
 
 from poll import Poll
 from permissions import APP_ACL
 
 
-class PollApplicationPolicy(ptah_cms.ApplicationPolicy):
+class PollApplicationPolicy(ptah.cms.ApplicationPolicy):
 
     __acl__ = APP_ACL
 
 
-class PollApplication(ptah_cms.ApplicationRoot):
+class PollApplication(ptah.cms.ApplicationRoot):
 
     __name__ = ''
 
-    __type__ = ptah_cms.Type(
+    __type__ = ptah.cms.Type(
         'devpoll-application',
         'Poll application',
         filter_content_types = True,
         allowed_content_types = (Poll.__type__,))
 
     _sql_values = ptah.QueryFreezer(
-        lambda: ptah_cms.Session.query(Poll))
+        lambda: ptah.cms.Session.query(Poll))
 
     def values(self):
         return self._sql_values.all()
 
 
-pollAppFactory = ptah_cms.ApplicationFactory(
-    '/polls/', 'polls', 'Polls',  PollApplication, PollApplicationPolicy)
+pollAppFactory = ptah.cms.ApplicationFactory(
+    PollApplication, '/polls/', 'polls', 'Polls', PollApplicationPolicy)

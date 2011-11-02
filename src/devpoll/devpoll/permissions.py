@@ -1,6 +1,5 @@
 """ permissions """
 import ptah
-import ptah.cmsapp
 
 # permissions
 AddPoll = ptah.Permission('devpoll:AddPoll', 'Add poll')
@@ -9,6 +8,6 @@ AddPoll = ptah.Permission('devpoll:AddPoll', 'Add poll')
 
 # Application ACL
 APP_ACL = ptah.ACL('devpoll-application', 'Poll application ACL')
-#APP_ACL.allow(ptah.Everyone, ptah.cmsapp.View)
-APP_ACL.allow(ptah.Authenticated, ptah.cmsapp.View)
-APP_ACL.allow(ptah.cmsapp.Manager, ptah.cmsapp.ALL_PERMISSIONS)
+APP_ACL.allow(ptah.Everyone, ptah.cms.View)
+APP_ACL.allow(ptah.Authenticated, ptah.cms.View)
+#APP_ACL.allow(ptah.cms.Manager, ptah.cms.ALL_PERMISSIONS)

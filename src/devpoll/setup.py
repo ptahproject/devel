@@ -19,6 +19,11 @@ setup(
     zip_safe=False,
     install_requires = requires,
     entry_points = {
-        'ptah': ['addon = devpoll'],
+        'ptah': ['addon = devpoll',
+                 'pre_install = devpoll:pre_install',
+                 'post_install = devpoll:post_install',
+                 'pre_uninstall = devpoll:pre_uninstall',
+                 'post_uninstall = devpoll:post_uninstall',
+                 ],
     },
 )
