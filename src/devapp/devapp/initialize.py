@@ -36,6 +36,16 @@ class ApplicationPolicy(object):
         self.request = request
 
 
+view.register_route(
+    'ptah-manage-view','/ptah-manage',
+    ptah.manage.PtahManageRoute, use_global_views=True)
+
+
+view.register_route(
+    'ptah-manage','/ptah-manage/*traverse',
+    ptah.manage.PtahManageRoute, use_global_views=True)
+
+
 @config.subscriber(config.AppStarting)
 def initialize(ev):
     pconfig = ev.config
