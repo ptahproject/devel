@@ -1,0 +1,2008 @@
+diff -urN ptah/config/__init__.py ptah-orig/config/__init__.py
+--- ptah/config/__init__.py	2011-11-09 10:06:47.000000000 -0600
++++ ptah-orig/config/__init__.py	2011-11-03 15:25:39.000000000 -0500
+@@ -28,6 +28,7 @@
+ from ptah.config.settings import initialize_settings
+ from ptah.config.settings import SettingsInitialized
+ from ptah.config.settings import SettingsInitializing
++from ptah.config.settings import SettingsGroupModified
+ 
+ from ptah.config.shutdown import shutdown
+ from ptah.config.shutdown import shutdown_handler
+diff -urN ptah/config/settings.py ptah-orig/config/settings.py
+--- ptah/config/settings.py	2011-11-09 10:21:35.000000000 -0600
++++ ptah-orig/config/settings.py	2011-11-08 10:28:43.000000000 -0600
+@@ -1,5 +1,6 @@
+ """ settings """
+ import colander
++import transaction
+ import logging, os.path, ConfigParser
+ from datetime import datetime, timedelta
+ from collections import OrderedDict
+@@ -33,6 +34,15 @@
+         self.config = config
+ 
+ 
++class SettingsGroupModified(ObjectEvent):
++    """ ptah sends this event when settings group is modified. """
++    event('Settings group modified event')
++
++    def __init__(self, group, config):
++        self.object = group
++        self.config = config
++
++
+ _marker = object()
+ 
+ SETTINGS_ID = 'settings'
+@@ -54,7 +64,10 @@
+         settings.register(grp)
+ 
+ 
+-def initialize_settings(cfg, config=None, section=ConfigParser.DEFAULTSECT):
++def initialize_settings(
++    cfg, config=None, loader=None,
++    watcherFactory=_marker, section=ConfigParser.DEFAULTSECT):
++
+     settings = api.registry.storage[SETTINGS_OB_ID]
+     if settings.initialized:
+         raise RuntimeError(
+@@ -65,7 +78,16 @@
+     settings.config = config
+     settings.initialized = True
+ 
++    if watcherFactory is _marker:
++        watcherFactory = iNotifyWatcher
++
++    if config is None:
++        watcherFactory = None
++
+     here = cfg.get('here', './')
++    if loader is None:
++        loader = FileStorage(
++            settings, cfg.get('settings',''), here, section, watcherFactory)
+ 
+     include = cfg.get('include', '')
+     for f in include.split('\n'):
+@@ -77,7 +99,7 @@
+                     parser.has_section(section):
+                 cfg.update(parser.items(section, vars={'here': here}))
+ 
+-    settings.init(cfg)
++    settings.init(loader, cfg)
+ 
+     try:
+         api.notify(SettingsInitializing(config))
+@@ -125,12 +147,23 @@
+     """ settings management system """
+ 
+     config = None
++    loader = None
+     initialized = False
++    _changed = None
+ 
+     def __init__(self):
+         self.schema = schema.SchemaNode(schema.Mapping())
+ 
+-    def _load(self, rawdata, setdefaults=False):
++    def changed(self, group, attrs):
++        if not self._changed:
++            if self._changed is None:
++                self._changed = {}
++            transaction.get().addAfterCommitHook(self.save)
++
++        data = self._changed.setdefault(group, set())
++        data.update(attrs)
++
++    def _load(self, rawdata, setdefaults=False, suppressevents=True):
+         try:
+             rawdata = dict((k.lower(), v) for k, v in rawdata.items())
+             data = self.schema.unflatten(rawdata)
+@@ -167,9 +200,19 @@
+                         if v is not colander.null:
+                             group.schema[k].default = v
+ 
+-                group.update(data[name])
++                    group.update(data[name])
++                else:
++                    if not suppressevents:
++                        modified = data[name] != dict(group)
++                        group.update(data[name])
++                        if modified:
++                            api.registry.subscribers(
++                                (group,
++                                 SettingsGroupModified(group,self.config)),None)
++                    else:
++                        group.update(data[name])
+ 
+-    def init(self, defaults=None):
++    def init(self, loader, defaults=None):
+         for group in self.values():
+             data = {}
+             for node in group.schema.children:
+@@ -182,6 +225,28 @@
+         if defaults:
+             self._load(defaults, True)
+ 
++        self.loader = loader
++        if loader is None:
++            return
++
++        self._load(loader.load())
++
++    def load(self):
++        if self.loader is not None:
++            self._load(self.loader.load(), suppressevents=False)
++
++    def save(self, *args):
++        if self._changed is not None:
++            for grp, attrs in self._changed.items():
++                api.notify(SettingsGroupModified(self[grp], self.config))
++
++            self._changed = None
++
++        if self.loader is not None:
++            data = self.export()
++            if data:
++                self.loader.save(data)
++
+     def export(self, default=False):
+         result = {}
+         for name, group in self.items():
+@@ -291,4 +356,135 @@
+         return res
+ 
+     def __setitem__(self, name, value):
++        if name in self.schema and value != self.get(name):
++            get_settings().changed(self.name, (name,))
++
+         api.registry.storage[SETTINGS_ID][self.name][name] = value
++
++
++class FileStorage(object):
++    """ Simple ConfigParser file storage """
++
++    def __init__(self, settings, cfg, here = '',
++                 section=ConfigParser.DEFAULTSECT, watcherFactory=None):
++        self.cfg = cfg
++        self.here = here
++        self.section = section
++        self.watcher = None
++        self.watcherFactory = watcherFactory
++        self.settings = settings
++
++    def _startWatcher(self, fn):
++        if self.settings and self.watcher is None and \
++                self.watcherFactory is not None:
++            self.watcher = self.watcherFactory(self.settings.load)
++
++        if self.watcher is not None:
++            self.watcher.start(fn)
++            shutdown.shutdown_handler(self.watcher.stop)
++
++    def close(self):
++        if self.watcher is not None:
++            self.watcher.stop()
++
++    def load(self):
++        if not self.cfg:
++            return {}
++
++        if not os.path.exists(self.cfg):
++            f = open(self.cfg, 'wb')
++            f.write('[%s]\n'%self.section)
++            f.close()
++
++        log.info("Loading settings: %s"%self.cfg)
++        parser = ConfigParser.SafeConfigParser()
++        parser.read(self.cfg)
++        self._startWatcher(self.cfg)
++
++        if self.section != ConfigParser.DEFAULTSECT and \
++                not parser.has_section(self.section):
++            return {}
++
++        return dict(parser.items(self.section, vars={'here': self.here}))
++
++    def save(self, data):
++        if not self.cfg:
++            return
++
++        log.info("Saving settings: %s"%self.cfg)
++
++        parser = ConfigParser.ConfigParser(dict_type=OrderedDict)
++        parser.read(self.cfg)
++
++        if self.section != ConfigParser.DEFAULTSECT and \
++                not parser.has_section(self.section):
++            parser.add_section(self.section)
++
++        items = data.items()
++        items.sort()
++        for key, val in items:
++            parser.set(self.section, key, val)
++
++        fp = open(self.cfg, 'wb')
++        try:
++            parser.write(fp)
++        finally:
++            fp.close()
++
++        self._startWatcher(self.cfg)
++
++
++try:
++    import pyinotify
++except ImportError: # pragma: no cover
++    pyinotify = None
++
++
++class iNotifyWatcher(object):
++
++    if pyinotify:
++        mask = pyinotify.IN_MODIFY
++
++    started = False
++    filename = ''
++
++    def __init__(self, handler):
++        self._handler = handler
++
++    def _process_ev(self, ev):
++        if ev.mask & pyinotify.IN_MODIFY:
++            self._handler()
++
++    def start(self, filename): # pragma: no cover
++        pass
++
++    if pyinotify:
++        def start(self, filename):
++            if self.started:
++                if self.filename != filename: # pragma: no cover
++                    self.stop()
++                else:
++                    return
++
++            wm = pyinotify.WatchManager()
++            wm.add_watch(filename, self.mask, self._process_ev, False, False)
++            self.notifier = notifier = pyinotify.ThreadedNotifier(wm)
++            self.notifier.start()
++
++            self.started = True
++            self.filename = filename
++
++    def stop(self):
++        if self.started:
++            self.filename = ''
++            self.started = False
++
++            self.notifier.stop()
++            del self.notifier
++
++
++@shutdown.shutdown_handler
++def shutdown_handler():
++    settings = get_settings()
++    if settings.loader is not None:
++        settings.loader.close()
+diff -urN ptah/config/tests/test_settings.py ptah-orig/config/tests/test_settings.py
+--- ptah/config/tests/test_settings.py	2011-11-09 10:47:20.000000000 -0600
++++ ptah-orig/config/tests/test_settings.py	2011-11-08 10:28:43.000000000 -0600
+@@ -6,7 +6,8 @@
+ 
+ from ptah import config
+ from ptah.config.api import objectEventNotify
+-from ptah.config.settings import get_settings
++from ptah.config.settings import \
++    FileStorage, iNotifyWatcher, shutdown_handler, get_settings
+ 
+ 
+ class BaseTesting(unittest.TestCase):
+@@ -77,9 +78,15 @@
+             KeyError,
+             group.__getitem__, 'unknown')
+ 
++        self.assertEqual(get_settings()._changed, None)
++
+         group.node = 'test2'
+         self.assertFalse(group.node == group['node'])
+ 
++        group['node'] =  'test2'
++        self.assertTrue('group1' in get_settings()._changed)
++        self.assertTrue('node' in get_settings()._changed['group1'])
++
+     def test_settings_group_validation(self):
+         def validator(node, appstruct):
+             raise colander.Invalid(node['node'], 'Error')
+@@ -201,6 +208,23 @@
+         self.assertEqual(group.schema['node1'].default, 'default1')
+         self.assertEqual(group.schema['node2'].default, 30)
+ 
++    def test_settings_load_rawdata_and_send_modified_event(self):
++        group = self._create_default_group()
++
++        sm = config.registry
++
++        events = []
++        def h(grp, ev):
++            events.append((grp is group, ev))
++
++        sm.registerHandler(h, (group.category, config.SettingsGroupModified))
++
++        get_settings()._load({'group.node1': 'value'}, suppressevents=False)
++
++        self.assertTrue(events[0][0])
++        self.assertTrue(isinstance(events[0][1], config.SettingsGroupModified))
++        self.assertTrue(events[0][1].object is group)
++
+     def test_settings_load_rawdata_with_errors_in_rawdata(self):
+         group = self._create_default_group()
+ 
+@@ -230,15 +254,24 @@
+         self._init_ptah()
+ 
+         self.assertRaises(
+-            KeyError,
++            KeyError, 
+             get_settings()._load,
+             {'group.node1.0': '1',
+              'group.node1.3': '1'}, setdefaults=True)
+ 
++    def test_settings_init_with_no_loader(self):
++        group = self._create_default_group()
++
++        get_settings().init(None)
++
++        # initialized with defaults
++        self.assertEqual(dict(group), {'node1': 'default1', 'node2': 10})
++
+     def test_settings_init_with_no_loader_with_defaults(self):
+         group = self._create_default_group()
+ 
+-        get_settings().init({'group.node1': 'new-default',
++        get_settings().init(None,
++                            {'group.node1': 'new-default',
+                              'group.node2': 50})
+ 
+         self.assertEqual(group['node1'], 'new-default')
+@@ -247,6 +280,154 @@
+         self.assertEqual(group.schema['node1'].default, 'new-default')
+         self.assertEqual(group.schema['node2'].default, 50)
+ 
++    def test_settings_init_with_loader_values(self):
++        class Loader(object):
++            def load(self):
++                return {
++                    'group.node1': 'new-value',
++                    'group.node2': 60}
++
++        group = self._create_default_group()
++        get_settings().init(Loader())
++
++        self.assertEqual(group['node1'], 'new-value')
++        self.assertEqual(group['node2'], 60)
++
++        self.assertEqual(group.schema['node1'].default, 'default1')
++        self.assertEqual(group.schema['node2'].default, 10)
++
++    def test_settings_reload_from_loader(self):
++        class Loader(object):
++            def load(self):
++                return {'group.node1': 'new-value',
++                        'group.node2': 60}
++
++        group = self._create_default_group()
++        get_settings().init(Loader())
++
++        group['node1'] = 'val'
++        group['node2'] = 90
++
++        self.assertEqual(group['node1'], 'val')
++        self.assertEqual(group['node2'], 90)
++
++        get_settings().load()
++        self.assertEqual(group['node1'], 'new-value')
++        self.assertEqual(group['node2'], 60)
++
++    def test_settings_save(self):
++        class Loader(object):
++            def load(self):
++                return {}
++            def save(self, data):
++                saved.update(data)
++
++        saved = {}
++
++        group = self._create_default_group()
++        get_settings().init(Loader())
++
++        get_settings().save()
++        self.assertEqual(saved, {})
++
++        sm = config.registry
++
++        events = []
++
++        def h(grp, ev):
++            events.append((grp is group, ev))
++
++        sm.registerHandler(h, (group.category, config.SettingsGroupModified))
++        sm.registerHandler(objectEventNotify, (IObjectEvent,))
++
++        group['node1'] = 'val'
++        group['node2'] = 90
++
++        get_settings().save()
++
++        self.assertEqual(saved, {'group.node1': 'val', 'group.node2': '90'})
++        self.assertTrue(len(events) == 1)
++
++
++class TestFileStorage(BaseTesting):
++
++    def setUp(self):
++        self.dir = tempfile.mkdtemp()
++
++    def tearDown(self):
++        shutil.rmtree(self.dir)
++
++    def test_settings_fs_no_fails(self):
++        fs = FileStorage(None, None)
++
++        self.assertEqual(fs.watcher, None)
++        self.assertEqual(fs.load(), {})
++        self.assertEqual(fs.close(), None)
++
++    def test_settings_fs(self):
++        path = os.path.join(self.dir, 'settings.cfg')
++        f = open(path, 'wb')
++        f.write("""[DEFAULT]\ngroup.node1 = test\ngroup.node2 = 40""")
++        f.close()
++
++        fs = FileStorage(None, path)
++        self.assertEqual(fs.load(),
++                         {'group.node1': 'test',
++                          'group.node2': '40', 'here': ''})
++
++    def test_settings_fs_nosettings_file(self):
++        path = os.path.join(self.dir, 'settings.cfg')
++
++        fs = FileStorage(None, path)
++        self.assertEqual(fs.load(), {'here': ''})
++        self.assertTrue(os.path.exists(path))
++
++    def test_settings_fs_save_nosettings_file(self):
++        fs = FileStorage(None, None)
++        self.assertEqual(fs.save({'group.node1': 'test'}), None)
++
++    def test_settings_fs_save(self):
++        path = os.path.join(self.dir, 'settings.cfg')
++
++        fs = FileStorage(None, path)
++        self.assertEqual(fs.load(), {'here': ''})
++
++        fs.save({'group.node1': 'value'})
++        self.assertEqual(fs.load(), {'group.node1': 'value', 'here': ''})
++        self.assertEqual(open(path).read(),
++                         '[DEFAULT]\ngroup.node1 = value\n\n')
++
++    def test_settings_fs_save_to_existing(self):
++        path = os.path.join(self.dir, 'settings.cfg')
++        f = open(path, 'wb')
++        f.write('[TEST]\ngroup.node1 = value\n\n')
++        f.close()
++
++        fs = FileStorage(None, path)
++        self.assertEqual(fs.load(), {'here': ''})
++
++        fs.save({'group.node1': 'value'})
++        self.assertEqual(fs.load(), {'group.node1': 'value', 'here': ''})
++        self.assertEqual(
++            open(path).read(),
++            '[DEFAULT]\ngroup.node1 = value\n\n[TEST]\ngroup.node1 = value\n\n')
++
++    def test_settings_fs_save_to_existing_diff_sect(self):
++        path = os.path.join(self.dir, 'settings.cfg')
++        f = open(path, 'wb')
++        f.write('[DEFAULT]\ngroup.node = value\n\n')
++        f.close()
++
++        fs = FileStorage(None, path, section='TEST')
++        self.assertEqual(fs.load(), {})
++
++        fs.save({'group.node3': 'value'})
++
++        #self.assertEqual(fs.load(), {'group.node3': 'value', 'here': ''})
++        self.assertEqual(
++            open(path).read(),
++            '[DEFAULT]\ngroup.node = value\n\n[TEST]\ngroup.node3 = value\n\n')
++
+ 
+ class TestSettingsInitialization(BaseTesting):
+ 
+@@ -275,6 +456,8 @@
+ 
+         settings = get_settings()
+ 
++        self.assertTrue(settings.loader is None)
++
+         conf = object()
+         config.initialize_settings({}, conf)
+ 
+@@ -284,6 +467,8 @@
+         self.assertTrue(events[0].config is conf)
+         self.assertTrue(events[1].config is conf)
+ 
++        self.assertTrue(isinstance(settings.loader, FileStorage))
++
+     def test_settings_initialize_events_exceptions(self):
+         self._init_ptah()
+ 
+@@ -330,6 +515,30 @@
+         self.assertEqual(group['node1'], 'setting from ini')
+         self.assertEqual(group['node2'], 10)
+ 
++    def test_settings_initialize_load_settings_from_file(self):
++        path = os.path.join(self.dir, 'settings.cfg')
++        f = open(path, 'wb')
++        f.write('[DEFAULT]\ngroup.node1 = value\n\n')
++        f.close()
++
++        node1 = config.SchemaNode(
++                colander.Str(),
++                name = 'node1',
++                default = 'default1')
++
++        node2 = config.SchemaNode(
++                colander.Int(),
++                name = 'node2',
++                default = 10)
++
++        group = config.register_settings('group', node1, node2)
++        self._init_ptah()
++
++        config.initialize_settings({'settings': path})
++
++        self.assertEqual(group['node1'], 'value')
++        self.assertEqual(group['node2'], 10)
++
+     def test_settings_initialize_load_settings_include(self):
+         path = os.path.join(self.dir, 'settings.cfg')
+         f = open(path, 'wb')
+@@ -353,3 +562,43 @@
+ 
+         self.assertEqual(group['node1'], 'value')
+         self.assertEqual(group['node2'], 10)
++
++    @unittest.skipUnless(sys.platform == 'linux2', 'linux specific')
++    def test_settings_fs_watcher(self):
++        path = os.path.join(self.dir, 'settings.cfg')
++        f = open(path, 'wb')
++        f.write('[DEFAULT]\ngroup.node1 = value\n\n')
++        f.close()
++
++        node1 = config.SchemaNode(
++                colander.Str(),
++                name = 'node1',
++                default = 'default1')
++
++        group = config.register_settings('group', node1)
++        self._init_ptah()
++
++        class Config(object):
++            def begin(self): # pragma: no cover
++                pass
++            def end(self): # pragma: no cover
++                pass
++
++        config.initialize_settings({'settings': path}, config=Config())
++
++        settings = get_settings()
++
++        self.assertTrue(
++            isinstance(settings.loader.watcher, iNotifyWatcher))
++        self.assertEqual(group['node1'], 'value')
++
++        f = open(path, 'wb')
++        f.write('[DEFAULT]\ngroup.node1 = new_value\n\n')
++        f.close()
++        time.sleep(0.2)
++
++        self.assertEqual(group['node1'], 'new_value')
++        self.assertTrue(settings.loader.watcher.started)
++
++        shutdown_handler()
++        self.assertFalse(settings.loader.watcher.started)
+diff -urN ptah/manage/templates/customize-actions.pt ptah-orig/manage/templates/customize-actions.pt
+--- ptah/manage/templates/customize-actions.pt	1969-12-31 18:00:00.000000000 -0600
++++ ptah-orig/manage/templates/customize-actions.pt	2011-11-08 10:28:43.000000000 -0600
+@@ -0,0 +1,4 @@
++<ul tal:define="url context.url()">
++  <li><a href="${url}/">${context.title}</a></li>
++  <li tal:condition="view.hasWatcher"><a href="${url}/customized.html">Customized templates</a></li>
++</ul>
+diff -urN ptah/manage/templates/customized.pt ptah-orig/manage/templates/customized.pt
+--- ptah/manage/templates/customized.pt	1969-12-31 18:00:00.000000000 -0600
++++ ptah-orig/manage/templates/customized.pt	2011-10-17 15:02:30.000000000 -0500
+@@ -0,0 +1,56 @@
++<div class="page-header">
++  <h2>Packages</h2>
++</div>
++
++<div class="row">
++  <div class="span3 column">
++    <ul>
++      <li tal:repeat="pkg view.packages">
++	<a href="customized.html?pkg=${pkg}">${pkg}</a>
++      </li>
++    </ul>
++  </div>
++
++  <div class="span12 column">
++    <tal:block tal:condition="view.text">
++      <h2>${view.pkg}: ${view.template}</h2>
++      <form class="form-stacked" action="${request.url}" method="post">
++	<fieldset>
++	  <div class="clearfix">
++	    <label for="text">Source</label>
++	    <div class="input">
++	      <textarea style="height: 400px" tal:content="view.text"
++			class="xxlarge" name="text">></textarea>
++	    </div>
++	  </div>
++	</fieldset>
++	<div class="actions">
++	  <input type="submit" class="btn primary" name="save" value="Save" />
++	  <input type="submit" class="btn danger" name="remove" value="Remove" />
++	</div>
++      </form>
++    </tal:block>
++
++    <tal:block tal:condition="view.templates">
++      <h3>Customized templates for layer "${view.pkg}"</h3>
++      <p>List of templates</p>
++  
++      <table class="zebra-striped">
++	<tr tal:repeat="fn view.templates">
++	  <td>
++	    <h4>
++	      <a href="customized.html?pkg=${view.pkg}&template=${fn[0]}">${fn[0]}</a>
++	    </h4>
++	    <p>${fn[1][0]}</p>
++	  </td>
++	</tr>
++      </table>
++    </tal:block>
++  
++    <tal:block condition="not (view.templates or view.text)">
++      <p>To list available customized template select package from left navigation.</p>
++    </tal:block>
++
++
++  </div>
++</div>
+diff -urN ptah/manage/templates/customize.pt ptah-orig/manage/templates/customize.pt
+--- ptah/manage/templates/customize.pt	1969-12-31 18:00:00.000000000 -0600
++++ ptah-orig/manage/templates/customize.pt	2011-10-20 11:07:24.000000000 -0500
+@@ -0,0 +1,33 @@
++<div class="page-header">
++  <h2>Packages</h2>
++</div>
++
++<div class="row">
++  <div class="span3 column">
++    <ul>
++      <li tal:repeat="pkg view.packages">
++	<a href="./?pkg=${pkg}">${pkg}</a>
++      </li>
++    </ul>
++  </div>
++  <div class="span12 column">
++    <tal:block condition="view.selected">
++      <h3>Templates for layer "${view.selected}"</h3>
++      <p>List of templates</p>
++  
++      <table class="zebra-striped">
++	<tr tal:repeat="fn view.pkg_data">
++	  <td>
++	    <h4>
++	      <a href="view.html?pkg=${view.selected}&template=${fn[0]}">${fn[0]}</a>
++	    </h4>
++	    <p>${fn[1]}</p>
++	  </td>
++	</tr>
++      </table>
++    </tal:block>
++    <tal:block condition="not view.selected">
++      <p>To list available template select package from left navigation.</p>
++    </tal:block>
++  </div>
++</div>
+diff -urN ptah/manage/templates/template.pt ptah-orig/manage/templates/template.pt
+--- ptah/manage/templates/template.pt	1969-12-31 18:00:00.000000000 -0600
++++ ptah-orig/manage/templates/template.pt	2011-10-20 14:15:55.000000000 -0500
+@@ -0,0 +1,30 @@
++<div class="page-header">
++  <h2>Packages</h2>
++</div>
++
++<div class="row">
++  <div class="span3 column">
++    <ul>
++      <li tal:repeat="pkg view.packages">
++	<a href="./?pkg=${pkg}">${pkg}</a>
++      </li>
++    </ul>
++  </div>
++  <div class="span12 column">
++    <h3>${view.pkg}: ${view.template}</h3>
++
++    ${view.text}
++
++    <form method="post" action="${request.url}">
++      <div class="actions">
++	<a href="./?pkg=${view.pkg}" class="btn">Back</a>
++	<input type="submit" class="btn primary"
++	       name="customize" value="Customize" 
++	       tal:condition="view.hasWatcher" />
++      </div>
++      <input type="hidden" name="pkg" value="${view.pkg}" />
++      <input type="hidden" name="template" value="${view.template}"
++	     tal:condition="view.hasWatcher" />
++    </form>
++  </div>
++</div>
+diff -urN ptah/manage/templates.py ptah-orig/manage/templates.py
+--- ptah/manage/templates.py	1969-12-31 18:00:00.000000000 -0600
++++ ptah-orig/manage/templates.py	2011-11-07 10:46:48.000000000 -0600
+@@ -0,0 +1,207 @@
++import os, os.path
++from zope import interface
++from pyramid.httpexceptions import HTTPFound
++from ptah import config, view, manage
++from ptah.view import tmpl
++from ptah.view.customize import TEMPLATE
++
++
++class TemplatesModule(manage.PtahModule):
++    __doc__ = u'A listing of all templates registered grouped by module'
++
++    title = 'Templates'
++    manage.module('templates')
++
++
++class ModActions(view.Snippet):
++    view.snippet('ptah-module-actions', TemplatesModule,
++                 template = view.template(
++                     'ptah.manage:templates/customize-actions.pt'))
++
++    def update(self):
++        self.hasWatcher = TEMPLATE._watcher is not None and \
++            TEMPLATE._watcher.started
++
++
++class TemplatesView(view.View):
++    """List templates"""
++    view.pview(
++        context = TemplatesModule,
++        template = view.template('ptah.manage:templates/customize.pt'))
++
++    __intr_path__ = '/ptah-module/templates/index.html'
++
++    pkg_data = None
++
++    def update(self):
++        items = tmpl.registry.items()
++        items.sort()
++
++        self.packages = [name for name, data in items]
++        self.packages.sort()
++
++        request = self.request
++
++        self.selected = request.params.get('pkg')
++        if self.selected in self.packages:
++            self.pkg_data = self.load(self.selected)
++
++    def load(self, pkg):
++        data = tmpl.registry[pkg]
++
++        templates = data.items()
++        templates.sort()
++        info = []
++        for filename, (path,title,desc,_tmpl,pkg_name) in templates:
++            info.append((filename, path))
++
++        return info
++
++
++class ViewTemplate(view.View):
++    """View template"""
++    view.pview(
++        'view.html', TemplatesModule,
++        template = view.template('ptah.manage:templates/template.pt'))
++
++    __intr_path__ = '/ptah-module/templates/view.html'
++
++    format = None
++
++    def update(self):
++        reg = tmpl.registry
++        request = self.request
++
++        self.hasWatcher = TEMPLATE._watcher is not None \
++                          and TEMPLATE._watcher.started
++
++        items = tmpl.registry.items()
++        items.sort()
++        self.packages = [name for name, data in items]
++        self.packages.sort()
++
++        self.pkg = request.params.get('pkg')
++        if self.pkg not in reg:
++            raise HTTPFound(location = '')
++
++        data = reg[self.pkg]
++
++        self.template = request.params.get('template')
++        if self.template not in data:
++            raise HTTPFound(location = '')
++
++        if 'customize' in request.POST:
++            dir = TEMPLATE.custom
++            if not dir:
++                self.message("Customization is not allowed", 'warning')
++            else:
++                dest = os.path.join(dir, self.pkg)
++                if not os.path.exists(dest):
++                    os.makedirs(dest)
++
++                custfile = os.path.join(dest, self.template)
++                if os.path.exists(custfile):
++                    self.message("Template is customized alread. Remove previous version and try again.", 'warning')
++                else:
++                    d = open(custfile, 'wb')
++                    s = open(data[self.template][0], 'rb')
++                    d.write(s.read())
++                    d.close()
++                    s.close()
++                    raise HTTPFound(
++                        location='customized.html?pkg=%s&template=%s'%(
++                            self.pkg, self.template))
++
++        if not self.format:
++            from pygments import highlight
++            from pygments.lexers import HtmlLexer
++            from pygments.formatters import HtmlFormatter
++
++            html = HtmlFormatter(
++                linenos='inline',
++                lineanchors='sl',
++                anchorlinenos=True,
++                noclasses = True,
++                cssclass="ptah-source")
++
++            def format(self, code, html=html,
++                       highlight=highlight,
++                       lexer = HtmlLexer()):
++                return highlight(code, lexer, html)
++
++            self.__class__.format = format
++
++        text = open(data[self.template][0], 'rb').read()
++
++        if data[self.template][0].endswith('.pt'):
++            text = self.format(text)
++
++        if isinstance(text, str):
++            text = unicode(text, 'utf-8')
++
++        self.text = text
++
++
++class CustomTemplate(view.View):
++    """List customized templates"""
++    view.pview(
++        'customized.html', TemplatesModule,
++        template = view.template('ptah.manage:templates/customized.pt'))
++
++    __intr_path__ = '/ptah-module/templates/customized.html'
++
++    pkg = None
++    template = None
++    text = None
++    templates = None
++
++    def update(self):
++        dir = TEMPLATE.custom
++
++        if not dir:
++            self.message("There are no any customizations", 'warning')
++            raise HTTPFound(location='')
++
++        packages = []
++        for name in os.listdir(dir):
++            if name in tmpl.registry and \
++                    os.path.isdir(os.path.join(dir, name)):
++                packages.append(name)
++
++        packages.sort()
++        self.packages = packages
++
++        reg = tmpl.registry
++
++        pkg = self.request.params.get('pkg')
++        if pkg in reg:
++            self.pkg = pkg
++
++            template = self.request.params.get('template')
++            if template in reg[pkg]:
++                custfile = os.path.join(dir, pkg, template)
++
++                self.template = template
++
++                if 'save' in self.request.POST:
++                    f = open(custfile, 'wb')
++                    f.write(self.request.POST['text'].encode('utf-8'))
++                    f.close()
++                    self.message('Template has been saved.')
++
++                if 'remove' in self.request.POST:
++                    os.unlink(custfile)
++                    raise HTTPFound(location='customized.html?pkg=%s'%pkg)
++
++                self.text = unicode(open(custfile, 'rb').read(), 'utf-8')
++            else:
++                data = reg[pkg]
++                pkgdir = os.path.join(dir, pkg)
++
++                templates = []
++                for name in os.listdir(pkgdir):
++                    if name in data:
++                        templates.append((name, data[name]))
++
++                templates.sort()
++                self.templates = templates
+diff -urN ptah/manage/tests/test_templates.py ptah-orig/manage/tests/test_templates.py
+--- ptah/manage/tests/test_templates.py	1969-12-31 18:00:00.000000000 -0600
++++ ptah-orig/manage/tests/test_templates.py	2011-11-07 10:46:48.000000000 -0600
+@@ -0,0 +1,69 @@
++import ptah
++import os.path
++import pkg_resources
++from pyramid.testing import DummyRequest
++
++from base import Base
++
++
++class TestTemplatesModule(Base):
++
++    def test_tmpls_module(self):
++        from ptah.manage.manage import PtahManageRoute
++        from ptah.manage.templates import TemplatesModule
++
++        request = DummyRequest()
++
++        ptah.authService.set_userid('test')
++        ptah.PTAH_CONFIG['managers'] = ('*',)
++        mr = PtahManageRoute(request)
++        mod = mr['templates']
++
++        self.assertIsInstance(mod, TemplatesModule)
++
++    def test_tmpls_view(self):
++        from ptah.manage.templates import TemplatesModule, TemplatesView
++
++        request = DummyRequest()
++
++        mod = TemplatesModule(None, request)
++
++        res = TemplatesView.__renderer__(mod, request)
++        self.assertEqual(res.status, '200 OK')
++
++    def test_templs_view_pkg(self):
++        from ptah.view import tmpl
++        from ptah.manage.templates import TemplatesModule, TemplatesView
++
++        dist = pkg_resources.get_distribution('ptah')
++        path = os.path.join(
++            dist.location, 'ptah', 'manage', 'templates', 'template.pt')
++        tmpl.registry['ptah.manage'] = {
++            'template.pt': [path,'title','',None,'ptah.manage']}
++
++        request = DummyRequest(params={'pkg': 'ptah.manage'})
++
++        mod = TemplatesModule(None, request)
++
++        res = TemplatesView.__renderer__(mod, request)
++        self.assertEqual(res.status, '200 OK')
++        self.assertIn('template.pt', res.body)
++
++    def test_templs_view_template(self):
++        from ptah.view import tmpl
++        from ptah.manage.templates import TemplatesModule, ViewTemplate
++
++        request = DummyRequest(params={'pkg': 'ptah.manage',
++                                       'template': 'template.pt'})
++
++        mod = TemplatesModule(None, request)
++
++        dist = pkg_resources.get_distribution('ptah')
++        path = os.path.join(
++            dist.location, 'ptah', 'manage', 'templates', 'template.pt')
++        tmpl.registry['ptah.manage'] = {'template.pt': [path]}
++
++        res = ViewTemplate.__renderer__(mod, request)
++
++        self.assertEqual(res.status, '200 OK')
++        self.assertIn('ptah.manage: template.pt', res.body)
+diff -urN ptah/view/commands.py ptah-orig/view/commands.py
+--- ptah/view/commands.py	2011-11-09 10:28:38.000000000 -0600
++++ ptah-orig/view/commands.py	2011-11-07 16:15:27.000000000 -0600
+@@ -1,9 +1,10 @@
+ """ paste commands """
+-import os.path, shutil, textwrap
++import os.path, shutil, textwrap, pkg_resources
+ from paste.script.command import Command
+ 
+ from ptah import config
+-from ptah.view import resources
++from ptah.view import tmpl, resources
++from ptah.view.customize import _Manager
+ 
+ 
+ grpTitleWrap = textwrap.TextWrapper(
+@@ -11,6 +12,11 @@
+     subsequent_indent='  ',
+     width = 80)
+ 
++grpDescriptionWrap = textwrap.TextWrapper(
++    initial_indent='    ',
++    subsequent_indent='    ', width = 80)
++
++
+ nameWrap = textwrap.TextWrapper(
+     initial_indent='  - ',
+     subsequent_indent='    ', width = 80)
+@@ -23,6 +29,181 @@
+     initial_indent='       ',
+     subsequent_indent='       ', width = 80)
+ 
++nameDescriptionWrap = textwrap.TextWrapper(
++    initial_indent=' * ',
++    subsequent_indent='', width = 80)
++
++
++class TemplatesCommand(Command):
++    """ 'templates' paste command"""
++
++    summary = "ptah templates management"
++    usage = ""
++    group_name = "ptah"
++    parser = Command.standard_parser(verbose=False)
++    parser.add_option('-a', '--all', dest='all',
++                      action="store_true",
++                      help = 'List all registered templaes')
++    parser.add_option('-l', '--list', dest='section', default='',
++                      help = 'List registered templates')
++    parser.add_option('-p', '--print', dest='filename',
++                      metavar="PACKAGE:FILE",
++                      help = 'Print template')
++    parser.add_option('-c', '--customize', dest='custfile',
++                      metavar="PACKAGE:FILE",
++                      help = 'Customize template')
++    parser.add_option('-o', '--output', dest='customdir',
++                      help = 'Directory for custom templates.')
++    parser.add_option('-f', '--force', dest="force",
++                      action="store_true", default=False,
++                      help = 'Force override custom template.')
++
++    def command(self):
++        # load all ptah packages
++        config.initialize(autoinclude=True)
++
++        if self.options.filename:
++            self.print_template(self.options.filename)
++            return
++
++        if self.options.custfile:
++            self.customize_template(self.options.custfile,
++                                    self.options.customdir,
++                                    self.options.force)
++            return
++
++        # print description
++        if self.options.all:
++            section = ''
++        else:
++            section = self.options.section
++
++        items = tmpl.registry.items()
++        items.sort()
++        for name, data in items:
++            if section and name != section:
++                continue
++
++            dist = None
++            pkg_name = name
++            while 1:
++                try:
++                    dist = pkg_resources.get_distribution(pkg_name)
++                    if dist is not None:
++                        break
++                except pkg_resources.DistributionNotFound:
++                    if '.' not in pkg_name:
++                        break
++                    pkg_name = pkg_name.rsplit('.',1)[0]
++
++            if dist is None:
++                continue
++
++            print ''
++            title = name
++
++            print grpTitleWrap.fill(title)
++            #if group.description:
++            #    print grpDescriptionWrap.fill(group.description)
++
++            dist_loc_len = len(dist.location)
++
++            print
++            templates = data.items()
++            templates.sort()
++            for filename, (path,title,desc,_tmpl,pkg_name) in templates:
++                if path.lower().startswith(dist.location.lower()):
++                    path = '..%s'%path[dist_loc_len:]
++
++                print nameWrap.fill('%s: %s'%(filename, path))
++                if title:
++                    print nameTitleWrap.fill(title)
++                if desc:
++                    print nameTitleWrap.fill(desc)
++
++                data = _Manager.layers.get(name)
++                if data:
++                    for pkgname, abspath, path in data: # pragma: no cover
++                        if os.path.exists(os.path.join(abspath, filename)):
++                            print overWrap.fill(
++                                'overriden by: %s (%s)'%(pkgname, path))
++                print
++
++    def print_template(self, filename):
++        if ':' not in filename:
++            print "Template path format is wrong, it should be PACKAGE:FILENAME"
++            return
++
++        package, filename = filename.split(':')
++        if package not in tmpl.registry:
++            print "Can't find package '%s'"%package
++            return
++
++        data = tmpl.registry[package]
++        if filename not in data:
++            print "Can't find template '%s'"%filename
++            return
++
++        path, t, d, _tmpl, pkg = data[filename]
++
++        if t:
++            print t
++        if d:
++            print d
++        print 'Package:  %s'%package
++        print 'Template: %s'%filename
++        print '='*80
++
++        f = open(path, 'rb')
++        print f.read()
++        f.close()
++
++    def customize_template(self, fn, custom, force=False):
++        if ':' not in fn:
++            print "Template path format is wrong, it should be PACKAGE:FILENAME"
++            return
++
++        package, filename = fn.split(':')
++        if package not in tmpl.registry:
++            print "Can't find package '%s'"%package
++            return
++
++        data = tmpl.registry[package]
++        if filename not in data:
++            print "Can't find template '%s'"%filename
++            return
++
++        if not custom:
++            print "Output directory is required, use -o CUSTOMDIR"
++            return
++
++        path, t, d, _tmpl, pkg_name = data[filename]
++
++        if not os.path.isdir(custom):
++            print "Custom path is not a directory: %s"%custom
++            return
++
++        dest = os.path.join(custom, package)
++        if not os.path.exists(dest):
++            os.makedirs(dest)
++
++        custfile = os.path.join(dest, filename)
++        if os.path.exists(custfile):
++            if not force:
++                print "Custom file '%s' already exists. "\
++                    "Use '--force' to override."%filename
++                return
++            else:
++                print 'Overrids:',
++
++        d = open(custfile, 'wb')
++        s = open(path, 'rb')
++        d.write(s.read())
++        d.close()
++        s.close()
++
++        print "Template '%s' has been customized.\nPath: %s"%(fn, custfile)
++
+ 
+ class StaticCommand(Command):
+     """ 'static' paste command"""
+diff -urN ptah/view/customize.py ptah-orig/view/customize.py
+--- ptah/view/customize.py	2011-11-09 10:26:10.000000000 -0600
++++ ptah-orig/view/customize.py	2011-10-20 11:07:24.000000000 -0500
+@@ -1,13 +1,36 @@
++""" simple template customization """
++import os
++import logging
+ import colander
+-from chameleon import template as chameleon_template
++try:
++    from chameleon import template as chameleon_template
++except: # pragma: no cover
++    chameleon_template = None
+ 
+ from ptah import config
++from ptah.view import tmpl
++
++log = logging.getLogger('ptah.view')
+ 
+ 
+ TEMPLATE = config.register_settings(
+     'template',
+ 
+     config.SchemaNode(
++        colander.Str(),
++        name = 'custom',
++        default = '',
++        title = 'Directory',
++        description = 'Filesystem directory with custom templates.'),
++
++    config.SchemaNode(
++        colander.Str(),
++        name = 'watcher',
++        default = 'inotify',
++        title = 'Filesystem watcher',
++        description = 'Custom filesystem directory watcher.'),
++
++    config.SchemaNode(
+         colander.Bool(),
+         name = 'chameleon_reload',
+         default = False,
+@@ -16,6 +39,8 @@
+ 
+     title = 'Templates settings',
+     )
++TEMPLATE._manager = None
++TEMPLATE._watcher = None
+ 
+ 
+ class _ViewLayersManager(object):
+@@ -54,8 +79,202 @@
+         self.callable(config, *args, **kw)
+ 
+ 
++class _TemplateLayersManager(object):
++
++    def __init__(self):
++        self.layers = {}
++
++    def layer(self, pkg, path):
++        abspath, pkgname = tmpl.path(path)
++        layer = self.layers.setdefault(pkg, [])
++        layer.insert(0, (pkgname, abspath, path))
++
++    def initialize(self, filter=None):
++        layers = self.layers
++
++        for pkg, pkg_data in tmpl.registry.items():
++            if pkg not in layers:
++                continue
++
++            if filter is not None and filter != pkg:
++                continue # pragma: no cover
++
++            for fn, (p,t,d,t,_pkg) in pkg_data.items():
++
++                for pkgname, abspath, path in layers[pkg]:
++                    tpath = os.path.join(abspath, fn)
++                    if os.path.isfile(tpath):
++                        t.setCustom(tmpl.getRenderer(tpath))
++                        break
++
++
++_Manager = _TemplateLayersManager()
++
++layer = _Manager.layer
++
++
++class _GlobalLayerManager(object):
++
++    def __init__(self, directory):
++        self.directory = directory
++
++    def load(self):
++        for dir in os.listdir(self.directory):
++            if dir not in tmpl.registry:
++                continue
++
++            path = os.path.join(self.directory, dir)
++
++            if os.path.isdir(path):
++                pkg_data = tmpl.registry[dir]
++                for item in os.listdir(path):
++                    if item in pkg_data:
++                        pkg_data[item][3].setCustom(
++                            tmpl.getRenderer(os.path.join(path, item)))
++
++    def reload_package(self, pkg):
++        if pkg not in tmpl.registry:
++            return
++
++        # unload
++        pkg_data = tmpl.registry[pkg]
++
++        for fn, (p,t,d,t,pkg) in pkg_data.items():
++            if t.custom is not None:
++                t.setCustom(None)
++
++        # re-initialize layers
++        _Manager.initialize(pkg)
++
++        # load global custom
++        path = os.path.join(self.directory, pkg)
++
++        if os.path.isdir(path):
++            pkg_data = tmpl.registry[pkg]
++            try:
++                items = dict((f, 1) for f in os.listdir(path))
++            except os.OSError: # pragma: no cover
++                return
++
++            for fn, (p,t,d,t,pkg) in pkg_data.items():
++                if fn in items and t.custom is None:
++                    t.setCustom(tmpl.getRenderer(os.path.join(path, fn)))
++                else:
++                    if t.custom is not None:
++                        t.setCustom(None) # pragma: no cover
++
++    def unload(self):
++        for n, pkg_data in tmpl.registry.items():
++            for fn, (p,t,d,t,pkg) in pkg_data.items():
++                if t.custom is not None:
++                    t.setCustom(None)
++
++try:
++    import pyinotify
++except ImportError: # pragma: no cover
++    pyinotify = None
++
++
++class iNotifyWatcher(object):
++
++    if pyinotify:
++        mask = pyinotify.IN_CREATE|pyinotify.IN_DELETE|\
++               pyinotify.IN_MOVED_FROM|pyinotify.IN_MOVED_TO
++
++    type = 'inotify'
++
++    def __init__(self, manager):
++        self.manager = manager
++        self.directory = manager.directory
++
++        self.started = False
++
++        if pyinotify:
++            self._wm = pyinotify.WatchManager()
++            self._notifier = pyinotify.ThreadedNotifier(self._wm)
++            self._wm.add_watch(
++                self.manager.directory,
++                self.mask, self._process_ev, True, True)
++
++    def _process_ev(self, ev):
++        if ev.dir:
++            return
++
++        dir, pkg = os.path.split(ev.path)
++        if self.directory == dir:
++            self.manager.reload_package(pkg)
++
++    def start(self):
++        if pyinotify:
++            self._notifier.start()
++            self.started = True
++
++    def stop(self):
++        if self.started:
++            self.started = False
++            self._notifier.stop()
++
++
+ @config.subscriber(config.SettingsInitializing)
++@config.subscriber(TEMPLATE.category, config.SettingsGroupModified)
+ def initialize(*args):
+-    chameleon_template.AUTO_RELOAD = TEMPLATE.chameleon_reload
+-    chameleon_template.BaseTemplateFile.auto_reload = \
+-        TEMPLATE.chameleon_reload
++    _Manager.initialize()
++
++    config = args[-1].config
++    try:
++        dir = TEMPLATE.custom
++
++        if TEMPLATE._manager is not None:
++            if TEMPLATE._manager.directory != dir:
++                TEMPLATE._manager.unload()
++                TEMPLATE._manager = None
++
++        if TEMPLATE._watcher is not None:
++            if TEMPLATE._watcher.directory != dir or \
++                    TEMPLATE._watcher.type != TEMPLATE.watcher:
++                TEMPLATE._watcher.stop()
++                TEMPLATE._watcher = None
++                log.info('Filesystem watcher has been disabled')
++
++        if dir and TEMPLATE._manager is None:
++            if not os.path.exists(dir):
++                os.mkdir(dir)
++            if not os.path.isdir(dir):
++                log.warning("Custom path is not directory: %s", dir)
++                return
++
++            log.info('Initializing templates customization support')
++
++            _Manager.initialize()
++            TEMPLATE._manager = _GlobalLayerManager(dir)
++            TEMPLATE._manager.load()
++
++        if config is not None and dir and \
++                TEMPLATE._watcher is None and TEMPLATE._manager is not None:
++            if TEMPLATE.watcher == 'inotify':
++                TEMPLATE._watcher = iNotifyWatcher(TEMPLATE._manager)
++                TEMPLATE._watcher.start()
++                log.info('Starting custom directory filesystem watcher')
++            else:
++                log.info('Filesystem watcher is disabled')
++
++    except Exception, e:
++        log.warning("Error during view customization initializations: %s", e)
++
++    if chameleon_template:
++        chameleon_template.AUTO_RELOAD = TEMPLATE.chameleon_reload
++        chameleon_template.BaseTemplateFile.auto_reload = \
++            TEMPLATE.chameleon_reload
++
++
++@config.shutdown_handler
++def shutdown():
++    if TEMPLATE._watcher is not None:
++        TEMPLATE._watcher.stop()
++        TEMPLATE._watcher = None
++
++
++@config.cleanup
++def cleanup():
++    _Manager.layers.clear()
++    #_layersManager.layers.clear()
+diff -urN ptah/view/__init__.py ptah-orig/view/__init__.py
+--- ptah/view/__init__.py	2011-11-09 10:37:55.000000000 -0600
++++ ptah-orig/view/__init__.py	2011-10-25 09:30:11.000000000 -0500
+@@ -1,17 +1,5 @@
+ # ptah.view public API
+ 
+-# static resources
+-from ptah.view.resources import static
+-from ptah.view.resources import static_url
+-
+-# resource library
+-from ptah.view.library import library
+-from ptah.view.library import include
+-from ptah.view.library import render_includes
+-
+-
+-# !!! PRIVATE API !!!
+-
+ # path/template
+ from ptah.view.tmpl import path, template
+ 
+@@ -42,8 +30,18 @@
+ from ptah.view.renderers import TemplateRenderer
+ 
+ # layer
++from ptah.view.customize import layer
+ from ptah.view.customize import LayerWrapper
+ 
++# resource
++from ptah.view.resources import static
++from ptah.view.resources import static_url
++
++# resource library
++from ptah.view.library import library
++from ptah.view.library import include
++from ptah.view.library import render_includes
++
+ # directives
+ from ptah.view.directives import pview
+ from ptah.view.directives import layout
+diff -urN ptah/view/tests/test_commands.py ptah-orig/view/tests/test_commands.py
+--- ptah/view/tests/test_commands.py	2011-11-09 10:32:06.000000000 -0600
++++ ptah-orig/view/tests/test_commands.py	2011-10-26 10:50:53.000000000 -0500
+@@ -109,3 +109,208 @@
+         val = self.out.getvalue()
+         self.assertTrue("skipping ../ptah.view.tests/text.txt" in val)
+         self.assertTrue('test existing file' == open(file, 'r').read())
++
++
++class TestTemplatesCommand(unittest.TestCase):
++
++    def setUp(self):
++        self.tmpl = view.template('ptah.view.tests:/templates/test.pt')
++        self.out = StringIO()
++        self._stdout = sys.stdout
++        sys.stdout = self.out
++        self.dir = tempfile.mkdtemp()
++
++    def tearDown(self):
++        self.stdout = self._stdout
++        shutil.rmtree(self.dir)
++        config.cleanup_system()
++
++    def _run(self):
++        try:
++            run()
++        except SystemExit:
++            pass
++        return self.out.getvalue()
++
++    def test_commands_template_all(self):
++        sys.argv[:] = ['paste', 'templates', '-a']
++
++        val = self._run()
++        self.assertTrue('* ptah.view.tests' in val)
++
++        name = os.path.join('..', 'ptah', 'view', 'tests',
++            'templates', 'test.pt')
++
++        self.assertTrue(
++            '- test.pt: %s'%name in val)
++
++    def test_commands_template_all_several_pkg(self):
++        tmpl = view.template('ptah.view:/tests/templates/test.pt')
++
++        sys.argv[:] = ['paste', 'templates', '-a']
++
++        val = self._run()
++
++        self.assertTrue('* ptah.view' in val)
++        self.assertTrue('* ptah.view.tests' in val)
++
++        name = os.path.join('..', 'ptah', 'view', 'tests',
++            'templates', 'test.pt')
++        self.assertTrue(
++            '- test.pt: %s'%name in val)
++
++    def test_commands_template_list(self):
++        tmpl = view.template('ptah.view:/tests/templates/test.pt',
++                             title='Test template title',
++                             description = 'Test template description')
++
++        sys.argv[:] = ['paste', 'templates', '-l', 'ptah.view']
++
++        val = self._run()
++
++        self.assertTrue('* ptah.view' in val)
++        self.assertTrue('* ptah.view.tests' not in val)
++        self.assertTrue('Test template title' in val)
++        self.assertTrue('Test template description' in val)
++
++    # fixme: doesnt work
++    def test_commands_template_custom_layer_name(self):
++        tmpl = view.template('ptah.view:/tests/templates/test.pt',
++                             layer = 'test-unknown')
++
++        sys.argv[:] = ['paste', 'templates', '-l', 'test-unknown']
++
++        val = self._run()
++
++        #self.assertTrue('* test-unknown' in val)
++        #self.assertTrue(
++        #    '- test.pt: ../ptah/view/tests/templates/test.pt' in val)
++
++    # fixme: implement
++    def test_commands_template_list_with_ovveriden(self):
++        pass
++
++    def test_commands_template_print_error1(self):
++        sys.argv[:] = ['paste', 'templates', '-p', 'wrongformat']
++
++        val = self._run()
++
++        self.assertTrue('Template path format is wrong' in val)
++
++    def test_commands_template_print_error2(self):
++        tmpl = view.template('ptah.view:/tests/templates/test.pt')
++        sys.argv[:] = ['paste', 'templates', '-p', 'unknownpkg:filename']
++
++        val = self._run()
++
++        self.assertTrue("Can't find package 'unknownpkg'" in val)
++
++    def test_commands_template_print_error3(self):
++        tmpl = view.template('ptah.view:/tests/templates/test.pt')
++        sys.argv[:] = ['paste', 'templates', '-p', 'ptah.view:filename']
++
++        val = self._run()
++        self.assertTrue("Can't find template 'filename'" in val)
++
++    def test_commands_template_print(self):
++        tmpl = view.template('ptah.view:/tests/templates/test.pt',
++                             title='Test template title',
++                             description = 'Test template description')
++
++        sys.argv[:] = ['paste', 'templates', '-p', 'ptah.view:test.pt']
++
++        val = self._run()
++        self.assertTrue('Test template title' in val)
++        self.assertTrue('Test template description' in val)
++        self.assertTrue('Package:  ptah.view' in val)
++        self.assertTrue('Template: test.pt' in val)
++        self.assertTrue('<div>My snippet</div>' in val)
++
++    def test_commands_template_customize_error1(self):
++        sys.argv[:] = ['paste', 'templates', '-c', 'wrongformat']
++
++        val = self._run()
++
++        self.assertTrue('Template path format is wrong' in val)
++
++    def test_commands_template_customize_error2(self):
++        tmpl = view.template('ptah.view:/tests/templates/test.pt')
++        sys.argv[:] = ['paste', 'templates', '-c', 'unknownpkg:filename']
++
++        val = self._run()
++
++        self.assertTrue("Can't find package 'unknownpkg'" in val)
++
++    def test_commands_template_customize_error3(self):
++        tmpl = view.template('ptah.view:/tests/templates/test.pt')
++        sys.argv[:] = ['paste', 'templates', '-c', 'ptah.view:filename']
++
++        val = self._run()
++        self.assertTrue("Can't find template 'filename'" in val)
++
++    def test_commands_template_customize_error4(self):
++        tmpl = view.template('ptah.view:/tests/templates/test.pt')
++        sys.argv[:] = ['paste', 'templates', '-c', 'ptah.view:test.pt']
++
++        val = self._run()
++        self.assertTrue("Output directory is required, use -o CUSTOMDIR" in val)
++
++    def test_commands_template_customize_error5(self):
++        tmpl = view.template('ptah.view:/tests/templates/test.pt')
++
++        file = os.path.join(self.dir, 'file')
++        f = open(file, 'wb')
++        f.write(' ')
++        f.close()
++
++        sys.argv[:] = ['paste', 'templates', '-c', 'ptah.view:test.pt',
++                       '-o', file]
++
++        val = self._run()
++        self.assertTrue("Custom path is not a directory:" in val)
++
++    def test_commands_template_customize(self):
++        tmpl = view.template('ptah.view:/tests/templates/test.pt')
++
++        sys.argv[:] = ['paste', 'templates', '-c', 'ptah.view:test.pt',
++                       '-o', self.dir]
++
++        val = self._run()
++
++        self.assertTrue(
++            "Template 'ptah.view:test.pt' has been customized" in val)
++        self.assertEqual(
++            open(os.path.join(self.dir, 'ptah.view', 'test.pt'),'rb').read().strip(),
++            '<div>My snippet</div>')
++
++    def test_commands_template_skip_existing(self):
++        tmpl = view.template('ptah.view:/tests/templates/test.pt')
++
++        os.makedirs(os.path.join(self.dir, 'ptah.view'))
++        open(os.path.join(self.dir, 'ptah.view', 'test.pt'),'wb').write(
++            'my customized template')
++
++        sys.argv[:] = ['paste', 'templates', '-c', 'ptah.view:test.pt',
++                       '-o', self.dir]
++
++        val = self._run()
++        self.assertTrue("Custom file 'test.pt' already exists" in val)
++        self.assertEqual(
++            open(os.path.join(self.dir, 'ptah.view', 'test.pt'),'rb').read(),
++            'my customized template')
++
++    def test_commands_template_force_override(self):
++        tmpl = view.template('ptah.view:/tests/templates/test.pt')
++
++        os.makedirs(os.path.join(self.dir, 'ptah.view'))
++        open(os.path.join(self.dir, 'ptah.view', 'test.pt'),'w').write(
++            'my customized template')
++
++        sys.argv[:] = ['paste', 'templates', '-c', 'ptah.view:test.pt',
++                       '-o', self.dir, '--force']
++
++        val = self._run()
++        self.assertTrue("Overrids: Template 'ptah.view:test.pt' has been customized." in val)
++        self.assertEqual(
++            open(os.path.join(self.dir, 'ptah.view', 'test.pt'),'rb').read().strip(),
++            '<div>My snippet</div>')
+diff -urN ptah/view/tests/test_customize.py ptah-orig/view/tests/test_customize.py
+--- ptah/view/tests/test_customize.py	2011-11-09 10:39:10.000000000 -0600
++++ ptah-orig/view/tests/test_customize.py	2011-10-20 11:07:24.000000000 -0500
+@@ -1,4 +1,247 @@
+-import unittest
++""" tests for customize """
++import unittest, signal
++import sys, os, tempfile, shutil, time
++from ptah import config, view
++from ptah.view import customize
++from ptah.config import shutdown
++
++from base import Base
++
++
++class BaseLayerTest(Base):
++
++    file1 = "<div>Test template 1</div>"
++    file2 = "<div>Test template 2</div>"
++
++    def _setup_ptah(self):
++        pass
++
++    def _mkfile1(self, content):
++        f = open(os.path.join(self.dir1, 'file.pt'), 'wb')
++        f.write(content)
++        f.close()
++
++    def _mkfile2(self, content, name='file.pt'):
++        f = open(os.path.join(self.dir2, 'ptah.view.tests', name), 'wb')
++        f.write(content)
++        f.close()
++
++    def setUp(self):
++        self.dir1 = tempfile.mkdtemp()
++        self.dir2 = tempfile.mkdtemp()
++        os.makedirs(os.path.join(self.dir2, 'ptah.view.tests'))
++        Base.setUp(self)
++
++    def tearDown(self):
++        config.shutdown()
++        Base.tearDown(self)
++
++        shutil.rmtree(self.dir1)
++        shutil.rmtree(self.dir2)
++
++
++class TestGlobalCustomizeManagement(BaseLayerTest):
++
++    def test_customize_global_disabled(self):
++        self._init_ptah()
++
++        self.assertEqual('', customize.TEMPLATE.custom)
++
++    @unittest.skipUnless(sys.platform == 'linux2', 'linux specific')
++    def test_customize_global_enabled(self):
++        self._mkfile1(self.file1)
++        self._mkfile2(self.file2)
++
++        tmpl = view.template(os.path.join(self.dir1, 'file.pt'))
++        self.assertEqual(tmpl(), '<div>Test template 1</div>')
++
++        # enable custom folder
++        self._init_ptah({'template.custom': self.dir2})
++
++        #self.assertEqual(tmpl(), '<div>Test template 2</div>')
++
++    def test_customize_global_custom_layer_name(self):
++        self._mkfile1(self.file1)
++
++        tmpl = view.template(os.path.join(self.dir1, 'file.pt'),
++                             layer='layer')
++        self.assertEqual(tmpl(), '<div>Test template 1</div>')
++
++        os.makedirs(os.path.join(self.dir2, 'layer'))
++        f = open(os.path.join(self.dir2, 'layer', 'file.pt'), 'wb')
++        f.write(self.file2)
++        f.close()
++
++        # enable custom folder
++        self._init_ptah({'template.custom': self.dir2})
++
++        self.assertEqual(tmpl(), '<div>Test template 2</div>')
++
++    @unittest.skipUnless(sys.platform == 'linux2', 'linux specific')
++    def test_customize_global_reenable(self):
++        self._mkfile1(self.file1)
++        self._mkfile2(self.file2)
++
++        f = open(os.path.join(self.dir2, 'test'), 'wb')
++        f.write(' ')
++        f.close()
++
++        tmpl = view.template(os.path.join(self.dir1, 'file.pt'))
++        self.assertEqual(tmpl(), '<div>Test template 1</div>')
++
++        # load without watcher
++        self._init_ptah({'template.custom': os.path.join(self.dir2, 'test')})
++
++        self.assertTrue(customize.TEMPLATE._manager is None)
++        self.assertTrue(customize.TEMPLATE._watcher is None)
++        self.assertEqual(tmpl(), '<div>Test template 1</div>')
++
++        # reinitialize
++        customize.TEMPLATE['custom'] = self.dir2
++        customize.TEMPLATE['watcher'] = ''
++        customize.initialize(config.SettingsInitializing(object()))
++
++        self.assertTrue(customize.TEMPLATE._manager is not None)
++        self.assertTrue(customize.TEMPLATE._watcher is None)
++
++        self.assertEqual(tmpl(), '<div>Test template 2</div>')
++
++    @unittest.skipUnless(sys.platform == 'linux2', 'linux specific')
++    def test_customize_global_disable(self):
++        self._mkfile1(self.file1)
++        self._mkfile2(self.file2)
++
++        tmpl = view.template(os.path.join(self.dir1, 'file.pt'))
++        self.assertEqual(tmpl(), '<div>Test template 1</div>')
++
++        # enable custom folder
++        self._init_ptah({'template.custom': self.dir2})
++        self.assertEqual(tmpl(), '<div>Test template 2</div>')
++
++        customize.TEMPLATE['custom'] = ''
++        customize.initialize(config.SettingsInitializing(None))
++
++        self.assertTrue(customize.TEMPLATE._manager is None)
++        self.assertTrue(customize.TEMPLATE._watcher is None)
++        self.assertEqual(tmpl(), '<div>Test template 1</div>')
++
++    @unittest.skipUnless(sys.platform == 'linux2', 'linux specific')
++    def test_customize_global_createfolder_and_reloadpackage(self):
++        self._mkfile1(self.file1)
++
++        tmpl = view.template(os.path.join(self.dir1, 'file.pt'))
++        self.assertEqual(tmpl(), '<div>Test template 1</div>')
++
++        self.dir2 = os.path.join(self.dir2, 'test')
++
++        # enable custom folder
++        self._init_ptah({'template.custom': self.dir2})
++
++        self.assertTrue(os.path.isdir(self.dir2))
++        self.assertEqual(tmpl(), '<div>Test template 1</div>')
++
++        # create new custom resource
++        os.mkdir(os.path.join(self.dir2, 'ptah.view.tests'))
++        self._mkfile2(self.file2)
++        time.sleep(0.1)
++
++        # template reloaded
++        self.assertEqual(tmpl(), '<div>Test template 2</div>')
++
++        # remove template
++        shutil.rmtree(os.path.join(self.dir2, 'ptah.view.tests'))
++
++        time.sleep(0.1)
++        self.assertEqual(tmpl(), '<div>Test template 1</div>')
++
++    def test_customize_global_initialization_exc(self):
++        orig = customize.iNotifyWatcher.start
++        def start(self):
++            raise 'Error'
++
++        customize.iNotifyWatcher.start = start
++
++        # enable custom folder
++        self._init_ptah({'template.custom': self.dir2})
++        self.assertTrue(not customize.TEMPLATE._watcher.started)
++
++        customize.iNotifyWatcher.start = orig
++
++    # fixme: implement
++    def test_customize_global_and_layers(self):
++        pass
++
++
++class TestTemplateLayer(BaseLayerTest):
++
++    @unittest.skipUnless(sys.platform == 'linux2', 'linux specific')
++    def test_customize_layers(self):
++        self.dir3 = tempfile.mkdtemp()
++
++        self._mkfile1(self.file1)
++        f = open(os.path.join(self.dir1, 'file2.pt'), 'wb')
++        f.write(self.file2)
++        f.close()
++
++        tmpl1 = view.template(os.path.join(self.dir1, 'file.pt'))
++        tmpl2 = view.template(os.path.join(self.dir1, 'file2.pt'))
++        self.assertEqual(tmpl1(), '<div>Test template 1</div>')
++        self.assertEqual(tmpl2(), '<div>Test template 2</div>')
++
++        # layers
++        view.layer('ptah.view.tests', self.dir2)
++        view.layer('ptah.view.tests', self.dir3)
++
++        # override file.pt
++        f = open(os.path.join(self.dir2, 'file.pt'), 'wb')
++        f.write(self.file2)
++        f.close()
++
++        # override file2.pt
++        f = open(os.path.join(self.dir3, 'file2.pt'), 'wb')
++        f.write(self.file1)
++        f.close()
++
++        # initialize layers
++        customize._Manager.initialize()
++
++        self.assertEqual(tmpl1(), '<div>Test template 2</div>')
++        self.assertEqual(tmpl2(), '<div>Test template 1</div>')
++
++    def test_customize_layers_with_custom_name(self):
++        self.dir3 = tempfile.mkdtemp()
++
++        self._mkfile1(self.file1)
++        f = open(os.path.join(self.dir1, 'file2.pt'), 'wb')
++        f.write(self.file2)
++        f.close()
++
++        tmpl1 = view.template(os.path.join(self.dir1, 'file.pt'),
++                              layer = 'layer')
++        tmpl2 = view.template(os.path.join(self.dir1, 'file2.pt'),
++                              layer = 'layer')
++        self.assertEqual(tmpl1(), '<div>Test template 1</div>')
++        self.assertEqual(tmpl2(), '<div>Test template 2</div>')
++
++        # layers
++        view.layer('layer', self.dir2)
++        view.layer('layer', self.dir3)
++
++        # override file.pt
++        f = open(os.path.join(self.dir2, 'file.pt'), 'wb')
++        f.write(self.file2)
++        f.close()
++
++        # override file2.pt
++        f = open(os.path.join(self.dir3, 'file2.pt'), 'wb')
++        f.write(self.file1)
++        f.close()
++
++        # initialize layers
++        customize._Manager.initialize()
++
++        self.assertEqual(tmpl1(), '<div>Test template 2</div>')
++        self.assertEqual(tmpl2(), '<div>Test template 1</div>')
+ 
+ 
+ class TestViewLayersManager(unittest.TestCase):
