@@ -7,18 +7,20 @@ from ptah import authService, manage
 from ptah import cms
 from ptah.cms import tinfo, interfaces, events
 
+from initialize import ApplicationRoot
+
 
 view.register_layout(
-    'page', cms.ApplicationRoot,
+    'page',
     template = view.template("templates/layoutpage.pt"))
 
 view.register_layout(
-    'ptah-page', cms.ApplicationRoot, parent='workspace', layer='ptah.cmsapp',
+    'ptah-page', parent='workspace',
     template = view.template("templates/layout-ptahpage.pt"))
 
 
 class LayoutWorkspace(view.Layout):
-    view.layout('workspace', cms.ApplicationRoot, parent="page",
+    view.layout('workspace', ApplicationRoot, parent="page",
                 template=view.template("templates/layoutworkspace.pt"))
 
     def update(self):
@@ -29,7 +31,7 @@ class LayoutWorkspace(view.Layout):
 
 
 class ContentLayout(view.Layout):
-    view.layout('', interfaces.IContent, parent="workspace",
+    view.layout('', cms.Node, parent="workspace",
                 template=view.template("templates/layoutcontent.pt"))
 
     def update(self):
