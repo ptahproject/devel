@@ -13,7 +13,7 @@ from ptah.settings import MAIL, PTAH_CONFIG
 
 class Forbidden(view.View):
     view.pview(context=HTTPForbidden, layout='ptah-page',
-               template=view.template('ptah:templates/forbidden.pt'))
+               template=view.template('templates/forbidden.pt'))
 
     def update(self):
         request = self.request
@@ -52,7 +52,7 @@ class Forbidden(view.View):
 
 class NotFound(view.View):
     view.pview(context=HTTPNotFound, layout='ptah-page',
-               template=view.template('ptah:templates/notfound.pt'))
+               template=view.template('templates/notfound.pt'))
 
     def update(self):
         context = getattr(self.request, 'context', None)
