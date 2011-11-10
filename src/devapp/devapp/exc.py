@@ -23,7 +23,7 @@ class Forbidden(view.View):
             context = getattr(request, 'root', None)
 
         if context is None:
-            root_factory = config.registry.queryUtility(
+            root_factory = request.registry.queryUtility(
                 IRootFactory, default=DefaultRootFactory)
             context = root_factory(request)
             request.root = context
