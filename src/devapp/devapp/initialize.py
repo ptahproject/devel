@@ -3,7 +3,7 @@ from zope import interface
 from ptah import config, view
 
 import ptah
-from ptah.crowd.provider import CrowdUser, Session
+from biga.crowd.provider import CrowdUser, Session
 
 from devapp.content.page import Page, AddPage
 from devapp.content.folder import Folder

@@ -17,8 +17,5 @@ db.sqlite
 source
 src/docs
 src/ptah
-src/ptah_cms
-src/ptah_app
-src/colander
-src/memphis
+src/biga
 downloads/dist
