@@ -60,27 +60,28 @@ def initialize(ev):
     pconfig.add_route(
         'second-app', '/second/*traverse',
         factory = ptah.cms.ApplicationFactory(
-            ApplicationRoot, '/second/', 'second', 'Test subpath CMS'),
+            ApplicationRoot, '/second/', 'second', 'Test subpath CMS', 
+            config = pconfig),
         use_global_views = True)
 
     # mount cms to /third/cms/
     pconfig.add_route(
         'third-app', '/third/cms/*traverse',
         factory = ptah.cms.ApplicationFactory(
-            ApplicationRoot, '/third/cms/', 'third-app', 'CMS'),
+            ApplicationRoot, '/third/cms/', 'third-app', 'CMS', config=pconfig),
         use_global_views = True)
 
     # mount cms to /cms/
     factory = ptah.cms.ApplicationFactory(
-        ApplicationRoot, '/cms/', 'root', 'Ptah CMS')
+        ApplicationRoot, '/cms/', 'root', 'Ptah CMS', config=pconfig)
     pconfig.add_route(
         'root-app', '/cms/*traverse',
         factory = factory, use_global_views = True)
 
     # mount same 'root' application to '/' location
     factory = ptah.cms.ApplicationFactory(
-        ApplicationRoot, '/', 'root', 'Ptah CMS', 
-        policy=ApplicationPolicy, default_root=True)
+        ApplicationRoot, '/', 'root', 'Ptah CMS',
+        policy=ApplicationPolicy, default_root=True, config=pconfig)
     pconfig.set_root_factory(factory)
 
     # some more setup
@@ -93,12 +94,6 @@ def initialize(ev):
         Session.add(user)
 
     ApplicationPolicy.__local_roles__ = {user.uri: ['role:manager']}
-
-    # give manager role to admin
-    #if user.uuid not in root.__local_roles__:
-    #    root.__local_roles__[user.uuid] = ['role:manager']
-    #if 'simple-map' not in root.__permissions__:
-    #    root.__permissions__ = ['simple-map']
 
     # create default page
     if 'front-page' not in root.keys():
