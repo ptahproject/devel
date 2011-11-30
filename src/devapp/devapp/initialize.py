@@ -3,7 +3,8 @@ from zope import interface
 from ptah import config, view
 
 import ptah
-from biga.crowd.provider import CrowdUser, Session
+from ptah import cms
+from ptah_crowd import app as ptah_crowd_app
 
 from devapp.content.page import Page, AddPage
 from devapp.content.folder import Folder
@@ -88,12 +89,17 @@ def initialize(ev):
     root = factory(None)
 
     # admin user
-    user = Session.query(CrowdUser).first()
+    user = cms.Session.query(ptah_crowd_app.CrowdUser).first()
     if user is None:
-        user = CrowdUser('Ptah admin','admin','admin@ptahproject.org','12345')
-        Session.add(user)
+        user = ptah_crowd_app.CrowdUser(
+            title='Ptah admin',
+            login='admin',
+            email='admin@ptahproject.org',
+            password='12345')
+        crowd = ptah_crowd_app.factory()
+        crowd['admin'] = user
 
-    ApplicationPolicy.__local_roles__ = {user.uri: ['role:manager']}
+    ApplicationPolicy.__local_roles__ = {user.__uri__: ['role:manager']}
 
     # create default page
     if 'front-page' not in root.keys():
@@ -101,7 +107,7 @@ def initialize(ev):
         page.text = open(
             view.path('devapp:welcome.pt')[0], 'rb').read()
 
-        Session.add(page)
+        cms.Session.add(page)
         config.notify(ptah.cms.events.ContentCreatedEvent(page))
 
         root['front-page'] = page
@@ -110,14 +116,14 @@ def initialize(ev):
     if 'folder' not in root.keys():
         folder = Folder(title='Test folder')
         root['folder'] = folder
-        Session.add(folder)
+        cms.Session.add(folder)
         config.notify(ptah.cms.events.ContentCreatedEvent(folder))
 
         page = Page(title=u'Welcome to Ptah')
         page.text = open(
             view.path('devapp:welcome.pt')[0], 'rb').read()
 
-        Session.add(page)
+        cms.Session.add(page)
         config.notify(ptah.cms.events.ContentCreatedEvent(page))
 
         folder['front-page'] = page

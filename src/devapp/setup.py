@@ -4,6 +4,7 @@ from setuptools import setup
 
 requires = [
     'ptah',
+    'ptah_crowd',
     'biga',
     'poster',
     'sqlalchemy_migrate',
