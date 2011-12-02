@@ -4,7 +4,7 @@ from ptah import config, view
 
 import ptah
 from ptah import cms
-from ptah_crowd import app as ptah_crowd_app
+from ptah_crowd import provider as ptah_crowd_app
 
 from devapp.content.page import Page, AddPage
 from devapp.content.folder import Folder
@@ -97,7 +97,7 @@ def initialize(ev):
             email='admin@ptahproject.org',
             password='12345')
         crowd = ptah_crowd_app.factory()
-        crowd['admin'] = user
+        crowd.add(user)
 
     ApplicationPolicy.__local_roles__ = {user.__uri__: ['role:manager']}
 

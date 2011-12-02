@@ -3,7 +3,7 @@ from ptah import view, form, config
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 
 import ptah
-from ptah import authService, cms
+from ptah import auth_service, cms
 
 
 listing_template = view.template("devapp:templates/listing.pt")

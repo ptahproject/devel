@@ -3,7 +3,7 @@ from ptah import view, form, config
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 
 import ptah
-from ptah import authService, manage
+from ptah import auth_service, manage
 from ptah import cms
 from ptah.cms import tinfo, interfaces, events
 
@@ -25,9 +25,9 @@ class LayoutWorkspace(view.Layout):
 
     def update(self):
         self.root = getattr(self.request, 'root', None)
-        self.user = authService.get_current_principal()
+        self.user = auth_service.get_current_principal()
         self.isAnon = self.user is None
-        self.ptahManager = manage.check_access(authService.get_userid())
+        self.ptahManager = manage.check_access(auth_service.get_userid())
 
 
 class ContentLayout(view.Layout):
@@ -35,7 +35,7 @@ class ContentLayout(view.Layout):
                 template=view.template("templates/layoutcontent.pt"))
 
     def update(self):
-        self.actions = cms.list_uiactions(self.context, self.request)
+        self.actions = ptah.list_uiactions(self.context, self.request)
 
 
 class DefaultContentView(form.DisplayForm):
