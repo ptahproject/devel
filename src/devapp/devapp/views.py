@@ -3,35 +3,32 @@ from ptah import view, form, config
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 
 import ptah
-from ptah import auth_service, manage
-from ptah import cms
-from ptah.cms import tinfo, interfaces, events
 
 from initialize import ApplicationRoot
 
 
 view.register_layout(
     'page',
-    template = view.template("templates/layoutpage.pt"))
+    template = ptah.view.template("templates/layoutpage.pt"))
 
 view.register_layout(
     'ptah-page', parent='workspace',
-    template = view.template("templates/layout-ptahpage.pt"))
+    template = ptah.view.template("templates/layout-ptahpage.pt"))
 
 
 class LayoutWorkspace(view.Layout):
     view.layout('workspace', ApplicationRoot, parent="page",
-                template=view.template("templates/layoutworkspace.pt"))
+                template=ptah.view.template("templates/layoutworkspace.pt"))
 
     def update(self):
         self.root = getattr(self.request, 'root', None)
-        self.user = auth_service.get_current_principal()
+        self.user = ptah.auth_service.get_current_principal()
         self.isAnon = self.user is None
-        self.ptahManager = manage.check_access(auth_service.get_userid())
+        self.ptahManager = ptah.manage.check_access(ptah.auth_service.get_userid())
 
 
 class ContentLayout(view.Layout):
-    view.layout('', cms.Node, parent="workspace",
+    view.layout('', ptah.cms.Node, parent="workspace",
                 template=view.template("templates/layoutcontent.pt"))
 
     def update(self):
@@ -40,10 +37,10 @@ class ContentLayout(view.Layout):
 
 class DefaultContentView(form.DisplayForm):
     view.pview(
-        context = cms.Content,
-        permission = cms.View,
-        template=view.template("templates/contentview.pt"))
-
+        context = ptah.cms.Content,
+        permission = ptah.cms.View,
+        template=ptah.view.template("templates/contentview.pt"))
+                      
     @property
     def fields(self):
         return self.context.__type__.fieldset
@@ -56,5 +53,5 @@ class DefaultContentView(form.DisplayForm):
         return data
 
 
-class DefaultEditForm(cms.EditForm):
-    view.pview('edit.html', cms.Content, permission=cms.ModifyContent)
+class DefaultEditForm(ptah.cms.EditForm):
+    view.pview('edit.html', ptah.cms.Content, permission=ptah.cms.ModifyContent)

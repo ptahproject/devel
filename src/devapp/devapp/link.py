@@ -1,26 +1,25 @@
-import sqlalchemy as sqla
 import ptah
-from ptah import cms, view, form
+import sqlalchemy as sqla
 from pyramid.httpexceptions import HTTPFound
 
 
-class Link(cms.Content):
+class Link(ptah.cms.Content):
     __tablename__ = 'ptah_cms_link'
-    __type__ = cms.Type('link', permission=cms.AddContent)
+    __type__ = ptah.cms.Type('link', permission=ptah.cms.AddContent)
 
     href = sqla.Column(sqla.Unicode)
 
 
-@view.pview(context=Link, permission=cms.View)
+@ptah.view.pview(context=Link, permission=ptah.cms.View)
 def link_view(context, request):
     """ This is a default view for a Link model.
         If you have permission to edit it it will display the form.
         If you do not have ability to edit it; you will be redirected.
     """
-    can_edit = ptah.checkPermission(cms.ModifyContent, context)
+    can_edit = ptah.checkPermission(ptah.cms.ModifyContent, context)
 
     if can_edit:
-        vform = form.DisplayForm(context, request) # needs better UI
+        vform = ptah.form.DisplayForm(context, request) # needs better UI
         vform.fields = Link.__type__.fieldset
         vform.content = {
             'title': context.title,

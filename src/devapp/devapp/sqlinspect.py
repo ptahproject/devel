@@ -3,10 +3,10 @@ import logging
 import sqlahelper
 from sqlalchemy.engine import reflection
 
-from ptah import config
+import ptah
 
 
-@config.subscriber(config.AppStarting)
+@ptah.subscriber(ptah.events.AppStarting)
 def inspect(ev):
     engine = sqlahelper.get_engine()
     insp = reflection.Inspector.from_engine(engine)

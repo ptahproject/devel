@@ -1,10 +1,8 @@
 """ custom config """
 from zope import interface
-from ptah import config, view
 
 import ptah
-from ptah import cms
-from ptah_crowd import provider as ptah_crowd_app
+import ptah_crowd
 
 from devapp.content.page import Page, AddPage
 from devapp.content.folder import Folder
@@ -37,17 +35,7 @@ class ApplicationPolicy(object):
         self.request = request
 
 
-view.register_route(
-    'ptah-manage-view','/ptah-manage',
-    ptah.manage.PtahManageRoute, use_global_views=True)
-
-
-view.register_route(
-    'ptah-manage','/ptah-manage/*traverse',
-    ptah.manage.PtahManageRoute, use_global_views=True)
-
-
-@config.subscriber(config.AppStarting)
+@ptah.subscriber(ptah.events.AppStarting)
 def initialize(ev):
     pconfig = ev.config
 
@@ -89,14 +77,14 @@ def initialize(ev):
     root = factory(None)
 
     # admin user
-    user = cms.Session.query(ptah_crowd_app.CrowdUser).first()
+    user = ptah.cms.Session.query(ptah_crowd.CrowdUser).first()
     if user is None:
-        user = ptah_crowd_app.CrowdUser(
+        user = ptah_crowd.CrowdUser(
             title='Ptah admin',
             login='admin',
             email='admin@ptahproject.org',
             password='12345')
-        crowd = ptah_crowd_app.factory()
+        crowd = ptah_crowd.CrowdFactory()
         crowd.add(user)
 
     ApplicationPolicy.__local_roles__ = {user.__uri__: ['role:manager']}
@@ -105,10 +93,10 @@ def initialize(ev):
     if 'front-page' not in root.keys():
         page = Page(title=u'Welcome to Ptah')
         page.text = open(
-            view.path('devapp:welcome.pt')[0], 'rb').read()
+            ptah.view.path('devapp:welcome.pt')[0], 'rb').read()
 
-        cms.Session.add(page)
-        config.notify(ptah.cms.events.ContentCreatedEvent(page))
+        ptah.cms.Session.add(page)
+        pconfig.registry.notify(ptah.cms.events.ContentCreatedEvent(page))
 
         root['front-page'] = page
 
@@ -116,15 +104,15 @@ def initialize(ev):
     if 'folder' not in root.keys():
         folder = Folder(title='Test folder')
         root['folder'] = folder
-        cms.Session.add(folder)
-        config.notify(ptah.cms.events.ContentCreatedEvent(folder))
+        ptah.cms.Session.add(folder)
+        pconfig.registry.notify(ptah.cms.events.ContentCreatedEvent(folder))
 
         page = Page(title=u'Welcome to Ptah')
         page.text = open(
-            view.path('devapp:welcome.pt')[0], 'rb').read()
+            ptah.view.path('devapp:welcome.pt')[0], 'rb').read()
 
-        cms.Session.add(page)
-        config.notify(ptah.cms.events.ContentCreatedEvent(page))
+        ptah.cms.Session.add(page)
+        pconfig.registry.notify(ptah.cms.events.ContentCreatedEvent(page))
 
         folder['front-page'] = page
 
