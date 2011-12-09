@@ -56,8 +56,8 @@ class File(cms.Content):
 
 
 class FileDownloadView(view.View):
-    view.pview('download.html', File, layout=None,
-               permission = cms.View)
+    #view.pview('download.html', File, layout=None,
+    #           permission = cms.View)
 
     def render(self):
         data = self.context.data()
@@ -72,7 +72,7 @@ class FileDownloadView(view.View):
 
 
 class FileView(FileDownloadView):
-    view.pview(context = File, permission = cms.View)
+    #view.pview(context = File, permission = cms.View)
 
     template = view.template('devapp:templates/file.pt')
 
@@ -90,7 +90,7 @@ class FileView(FileDownloadView):
 
 
 class FileAddForm(cms.AddForm):
-    view.pview('addfile.html', cms.Container)
+    #view.pview('addfile.html', cms.Container)
 
     tinfo = File.__type__
 

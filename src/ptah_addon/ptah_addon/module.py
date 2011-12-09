@@ -38,9 +38,9 @@ class Config(object):
 
 
 class AddonsView(view.View):
-    view.pview(
-        context = AddonsModule,
-        template = view.template('ptah.addon:templates/addons.pt'))
+    #view.pview(
+    #    context = AddonsModule,
+    #    template = view.template('ptah.addon:templates/addons.pt'))
 
     def update(self):
         data = []
@@ -79,9 +79,9 @@ class AddonsView(view.View):
 
 
 class AddonView(view.View):
-    view.pview(
-        context = Addon,
-        template = view.template('ptah.addon:templates/package.pt'))
+    #view.pview(
+    #    context = Addon,
+    #    template = view.template('ptah.addon:templates/package.pt'))
 
     def update(self):
         actions = directives.scan(self.context.dist.project_name, set())

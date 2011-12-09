@@ -1,5 +1,6 @@
 from zope import interface
 from ptah import view, form, config
+from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 
 import ptah
@@ -8,9 +9,12 @@ from ptah import auth_service, cms
 
 listing_template = view.template("devapp:templates/listing.pt")
 
+
+@view_config(
+    context=ptah.cms.Container,
+    wrapper=ptah.wrap_layout(),
+    renderer='devapp:templates/listing.pt')
 class ContainerListing(view.View):
-    view.pview('listing.html', ptah.cms.Container,
-               template = listing_template)
 
     def update(self):
         context = self.context
@@ -42,19 +46,19 @@ class ContainerListing(view.View):
             print '=============', uris
 
 
-class ViewContainer(ContainerListing):
-    view.pview(context = ptah.cms.Container,
-               template = listing_template)
+#class ViewContainer(ContainerListing):
+#    view.pview(context = ptah.cms.Container,
+#               template = listing_template)
 
 
-class RenameForm(view.View):
-    view.pview(
-        'rename.html', cms.Container,
-        template=view.template("devapp:templates/folder_rename.pt"))
+#class RenameForm(view.View):
+#    view.pview(
+#        'rename.html', cms.Container,
+#        template=view.template("devapp:templates/folder_rename.pt"))
 
 
 class Adding(view.View):
-    view.pview('+', ptah.cms.Container)
+    #view.pview('+', ptah.cms.Container)
 
     template=view.template("devapp:templates/adding.pt")
 

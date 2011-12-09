@@ -19,10 +19,10 @@ class Page(cms.Content):
         )
 
     text = sqla.Column(sqla.Unicode,
-                       info = {'field_type': 'tinymce'})
+                       info = {'field_type': 'tinymce', 'missing': ''})
 
 
-ptah.view.register_view(
-    context = Page,
-    permission = cms.View,
-    template = ptah.view.template('devapp:templates/page.pt'))
+#ptah.view.register_view(
+#    context = Page,
+#    permission = cms.View,
+#    template = ptah.view.template('devapp:templates/page.pt'))

@@ -4,7 +4,7 @@ from ptah import cms, view
 
 
 view.register_layout('page', cms.ApplicationRoot, layer='devapp',
-                     template = view.template('templates/layoutpage.pt'))
+                     renderer='templates/layoutpage.pt')
 
 
 view.static('socketio', 'devsocket:socketio/')

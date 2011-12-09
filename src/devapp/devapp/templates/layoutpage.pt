@@ -9,6 +9,6 @@
     </head>
 
     <body>
-        <tal:block tal:content="structure content" />
+        <tal:block tal:content="structure wrapped_content" />
     </body>
 </html>

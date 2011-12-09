@@ -4,10 +4,10 @@ from pyramid.httpexceptions import HTTPFound
 
 
 class SharingForm(form.Form):
-    view.pview(
-        'sharing.html', ptah.ILocalRolesAware,
-        permission = cms.ShareContent,
-        template = view.template('devapp:templates/sharing.pt'))
+    #view.pview(
+    #    'sharing.html', ptah.ILocalRolesAware,
+    #    permission = cms.ShareContent,
+    #    template = view.template('devapp:templates/sharing.pt'))
 
     csrf = True
     fields = form.Fieldset(

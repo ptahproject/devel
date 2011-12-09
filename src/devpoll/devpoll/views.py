@@ -8,7 +8,7 @@ import permissions
 
 
 class AddPollForm(form.Form):
-    view.pview('addpoll.html', app.PollApplication)
+    #view.pview('addpoll.html', app.PollApplication)
 
     label = 'Add new poll'
     fields = poll.Poll.__type__.fieldset
@@ -32,9 +32,9 @@ class AddPollForm(form.Form):
 
 
 class ApplicationView(view.View):
-    view.pview(context = app.PollApplication,
-               permission = ptah.cms.View,
-               template = view.template('templates/app.pt'))
+    #view.pview(context = app.PollApplication,
+    #           permission = ptah.cms.View,
+    #           template = view.template('templates/app.pt'))
 
     def update(self):
         self.polls = self.context.values()
