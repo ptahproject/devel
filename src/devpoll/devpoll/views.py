@@ -41,9 +41,9 @@ class ApplicationView(view.View):
 
 
 class PollView(view.View):
-    view.pview(route = 'devpoll-poll-view',
-               context = app.PollApplication,
-               template = view.template('templates/poll.pt'))
+    #view.pview(route = 'devpoll-poll-view',
+    #           context = app.PollApplication,
+    #           template = view.template('templates/poll.pt'))
 
     def update(self):
         self.poll = poll.Poll.get(self.request.matchdict['id'])

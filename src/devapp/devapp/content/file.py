@@ -74,7 +74,7 @@ class FileDownloadView(view.View):
 class FileView(FileDownloadView):
     #view.pview(context = File, permission = cms.View)
 
-    template = view.template('devapp:templates/file.pt')
+    #template = view.template('devapp:templates/file.pt')
 
     def update(self):
         self.resolve = ptah.resolve
