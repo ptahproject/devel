@@ -7,39 +7,40 @@ import ptah
 from initialize import ApplicationRoot
 
 
-view.register_layout(
-    'page', renderer="templates/layoutpage.pt")
+ptah.register_layout(
+    'page', renderer="devapp:templates/layoutpage.pt")
 
-view.register_layout(
+ptah.register_layout(
     'ptah-page', parent='workspace',
-    renderer="templates/layout-ptahpage.pt")
+    renderer="devapp:templates/layout-ptahpage.pt")
 
 
-@view.layout('workspace', ApplicationRoot, parent="page",
-             renderer="templates/layoutworkspace.pt")
+@ptah.layout('workspace', ApplicationRoot, parent="page",
+             renderer="devapp:templates/layoutworkspace.pt")
 
-class LayoutWorkspace(view.Layout):
+class LayoutWorkspace(ptah.View):
 
     def update(self):
         self.root = getattr(self.request, 'root', None)
         self.user = ptah.auth_service.get_current_principal()
         self.isAnon = self.user is None
-        self.ptahManager = ptah.manage.check_access(ptah.auth_service.get_userid())
+        self.ptahManager = ptah.manage.check_access(
+            ptah.auth_service.get_userid())
 
 
-@view.layout('', ptah.cms.Node, parent="workspace",
+@ptah.layout('', ptah.cms.Node, parent="workspace",
              renderer="templates/layoutcontent.pt")
-class ContentLayout(view.Layout):
+class ContentLayout(ptah.View):
 
     def update(self):
         self.actions = ptah.list_uiactions(self.context, self.request)
 
 
+#@view.pview(
+#    context = ptah.cms.Content,
+#    permission = ptah.cms.View,
+#    renderer="devapp:templates/contentview.pt")
 class DefaultContentView(form.DisplayForm):
-    #view.pview(
-    #    context = ptah.cms.Content,
-    #    permission = ptah.cms.View,
-    #    template=ptah.view.template("templates/contentview.pt"))
                       
     @property
     def fields(self):

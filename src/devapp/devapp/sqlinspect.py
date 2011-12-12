@@ -6,7 +6,7 @@ from sqlalchemy.engine import reflection
 import ptah
 
 
-@ptah.subscriber(ptah.events.AppStarting)
+#@ptah.subscriber(ptah.events.AppStarting)
 def inspect(ev):
     engine = sqlahelper.get_engine()
     insp = reflection.Inspector.from_engine(engine)

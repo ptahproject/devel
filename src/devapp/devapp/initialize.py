@@ -1,5 +1,9 @@
 """ custom config """
+import transaction
 from zope import interface
+from pyramid.path import AssetResolver
+from pyramid.config import Configurator
+from pyramid.events import ApplicationCreated
 
 import ptah
 import ptah_crowd
@@ -35,9 +39,9 @@ class ApplicationPolicy(object):
         self.request = request
 
 
-@ptah.subscriber(ptah.events.AppStarting)
+@ptah.subscriber(ApplicationCreated)
 def initialize(ev):
-    pconfig = ev.config
+    pconfig = Configurator(ev.app.registry)
 
     pconfig.add_route('test-welcome', '/welcome.html')
     pconfig.add_view(route_name='test-welcome', renderer='devapp:welcome.pt')
@@ -89,14 +93,16 @@ def initialize(ev):
 
     ApplicationPolicy.__local_roles__ = {user.__uri__: ['role:manager']}
 
+    resolver = AssetResolver()
+
     # create default page
     if 'front-page' not in root.keys():
         page = Page(title=u'Welcome to Ptah')
         page.text = open(
-            ptah.view.path('devapp:welcome.pt')[0], 'rb').read()
+            resolver.resolve('welcome.pt').abspath(), 'rb').read()
 
         ptah.cms.Session.add(page)
-        pconfig.registry.notify(ptah.cms.events.ContentCreatedEvent(page))
+        pconfig.registry.notify(ptah.events.ContentCreatedEvent(page))
 
         root['front-page'] = page
 
@@ -105,16 +111,18 @@ def initialize(ev):
         folder = Folder(title='Test folder')
         root['folder'] = folder
         ptah.cms.Session.add(folder)
-        pconfig.registry.notify(ptah.cms.events.ContentCreatedEvent(folder))
+        pconfig.registry.notify(ptah.events.ContentCreatedEvent(folder))
 
         page = Page(title=u'Welcome to Ptah')
         page.text = open(
-            ptah.view.path('devapp:welcome.pt')[0], 'rb').read()
+            resolver.resolve('welcome.pt').abspath(), 'rb').read()
 
         ptah.cms.Session.add(page)
-        pconfig.registry.notify(ptah.cms.events.ContentCreatedEvent(page))
+        pconfig.registry.notify(ptah.events.ContentCreatedEvent(page))
 
         folder['front-page'] = page
 
         # set default view for folder
         folder.view = page.__uri__
+
+    transaction.commit()
