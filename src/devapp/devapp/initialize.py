@@ -1,6 +1,7 @@
 """ custom config """
 import transaction
 from zope import interface
+from pyramid.path import AssetResolver
 from pyramid.config import Configurator
 from pyramid.events import ApplicationCreated
 
@@ -40,7 +41,7 @@ class ApplicationPolicy(object):
 
 @ptah.subscriber(ApplicationCreated)
 def initialize(ev):
-    pconfig = Configurator(registry=ev.app.registry, autocommit=True)
+    pconfig = Configurator(ev.app.registry)
 
     pconfig.add_route('test-welcome', '/welcome.html')
     pconfig.add_view(route_name='test-welcome', renderer='devapp:welcome.pt')
@@ -76,7 +77,6 @@ def initialize(ev):
         policy=ApplicationPolicy, default_root=True, config=pconfig)
     pconfig.set_root_factory(factory)
     ev.app.root_factory = factory
-    pconfig.commit()
 
     # some more setup
     root = factory(None)
@@ -94,12 +94,13 @@ def initialize(ev):
 
     ApplicationPolicy.__local_roles__ = {user.__uri__: ['role:manager']}
 
+    resolver = AssetResolver()
+
     # create default page
     if 'front-page' not in root.keys():
         page = Page(title=u'Welcome to Ptah')
-        #page.text = open(
-        #    ptah.view.path('devapp:welcome.pt')[0], 'rb').read()
-        page.text = 'test front-page'
+        page.text = open(
+            resolver.resolve('welcome.pt').abspath(), 'rb').read()
 
         ptah.cms.Session.add(page)
         pconfig.registry.notify(ptah.events.ContentCreatedEvent(page))
@@ -114,9 +115,8 @@ def initialize(ev):
         pconfig.registry.notify(ptah.events.ContentCreatedEvent(folder))
 
         page = Page(title=u'Welcome to Ptah')
-        page.text = 'Welcome to Ptah'
-        #page.text = open(
-        #    ptah.view.path('devapp:welcome.pt')[0], 'rb').read()
+        page.text = open(
+            resolver.resolve('welcome.pt').abspath(), 'rb').read()
 
         ptah.cms.Session.add(page)
         pconfig.registry.notify(ptah.events.ContentCreatedEvent(page))

@@ -7,9 +7,6 @@ import ptah
 from ptah import auth_service, cms
 
 
-#listing_template = view.template("devapp:templates/listing.pt")
-
-
 @view_config(
     context=ptah.cms.Container,
     wrapper=ptah.wrap_layout(),
@@ -57,10 +54,10 @@ class ContainerListing(view.View):
 #        template=view.template("devapp:templates/folder_rename.pt"))
 
 
+@view_config('+', context=ptah.cms.Container,
+             wrapper=ptah.wrap_layout(),
+             renderer='devapp:templates/adding.pt')
 class Adding(view.View):
-    #view.pview('+', ptah.cms.Container)
-
-    #template=view.template("devapp:templates/adding.pt")
 
     def update(self):
         self.url = self.request.resource_url(self.context)
