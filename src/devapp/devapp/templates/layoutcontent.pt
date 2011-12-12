@@ -8,6 +8,6 @@
   </div>
 
   <div class="span13 columns">
-    ${content}
+    ${structure: wrapped_content}
   </div>
 </div>

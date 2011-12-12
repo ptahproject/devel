@@ -7,6 +7,7 @@ requires = [
     'ptah_crowd',
     'biga',
     'poster',
+    'pyramid_beaker',
     'sqlalchemy_migrate',
 ]
 

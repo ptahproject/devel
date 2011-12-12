@@ -1,5 +1,6 @@
 from zope import interface
 from ptah import view, form, config
+from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 
 import ptah
@@ -7,18 +8,18 @@ import ptah
 from initialize import ApplicationRoot
 
 
-view.register_layout(
-    'page', renderer="templates/layoutpage.pt")
+ptah.register_layout(
+    'page', renderer="devapp:templates/layoutpage.pt")
 
-view.register_layout(
+ptah.register_layout(
     'ptah-page', parent='workspace',
-    renderer="templates/layout-ptahpage.pt")
+    renderer="devapp:templates/layout-ptahpage.pt")
 
 
-@view.layout('workspace', ApplicationRoot, parent="page",
-             renderer="templates/layoutworkspace.pt")
+@ptah.layout('workspace', ApplicationRoot, parent="page",
+             renderer="devapp:templates/layoutworkspace.pt")
 
-class LayoutWorkspace(view.Layout):
+class LayoutWorkspace(ptah.View):
 
     def update(self):
         self.root = getattr(self.request, 'root', None)
@@ -27,19 +28,20 @@ class LayoutWorkspace(view.Layout):
         self.ptahManager = ptah.manage.check_access(ptah.auth_service.get_userid())
 
 
-@view.layout('', ptah.cms.Node, parent="workspace",
-             renderer="templates/layoutcontent.pt")
-class ContentLayout(view.Layout):
+@ptah.layout('', ptah.cms.Node, parent="workspace",
+             renderer="devapp:templates/layoutcontent.pt")
+class ContentLayout(ptah.View):
 
     def update(self):
         self.actions = ptah.list_uiactions(self.context, self.request)
 
 
+@view_config(
+        context = ptah.cms.Content,
+        wrapper = ptah.wrap_layout(),
+        permission = ptah.cms.View,
+        renderer="devapp:templates/contentview.pt")
 class DefaultContentView(form.DisplayForm):
-    #view.pview(
-    #    context = ptah.cms.Content,
-    #    permission = ptah.cms.View,
-    #    template=ptah.view.template("templates/contentview.pt"))
                       
     @property
     def fields(self):

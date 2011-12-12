@@ -35,7 +35,7 @@
     <div class="container">
       <tal:block content="structure view.render_messages()" />
       
-      ${content}
+      ${structure: wrapped_content}
     </div>
   </div>
 </div>

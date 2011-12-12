@@ -2,6 +2,6 @@
   <div class="span16 columns">
     <tal:block content="structure view.render_messages()" />
 
-    ${content}
+    ${structure: wrapped_content}
   </div>
 </div>
