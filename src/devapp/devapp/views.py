@@ -26,7 +26,7 @@ class LayoutWorkspace(ptah.View):
         self.user = ptah.auth_service.get_current_principal()
         self.isAnon = self.user is None
         self.ptahManager = ptah.manage.check_access(
-            ptah.auth_service.get_userid())
+            ptah.auth_service.get_userid(), self.request)
 
 
 @ptah.layout('', ptah.cms.Node, parent="workspace",
