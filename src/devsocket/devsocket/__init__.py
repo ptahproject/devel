@@ -3,7 +3,7 @@
 from ptah import cms, view
 
 
-view.register_layout('page', cms.ApplicationRoot, layer='devapp',
+view.layout.register('page', cms.ApplicationRoot, layer='devapp',
                      renderer='templates/layoutpage.pt')
 
 

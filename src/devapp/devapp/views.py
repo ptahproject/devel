@@ -8,10 +8,10 @@ import ptah
 from initialize import ApplicationRoot
 
 
-ptah.register_layout(
+ptah.layout.register(
     'page', renderer="devapp:templates/layoutpage.pt")
 
-ptah.register_layout(
+ptah.layout.register(
     'ptah-page', parent='workspace',
     renderer="devapp:templates/layout-ptahpage.pt")
 
@@ -29,7 +29,7 @@ class LayoutWorkspace(ptah.View):
             ptah.auth_service.get_userid(), self.request)
 
 
-@ptah.layout('', ptah.cms.Node, parent="workspace",
+@ptah.layout('', ptah.cms.Content, parent="workspace",
              renderer="devapp:templates/layoutcontent.pt")
 class ContentLayout(ptah.View):
 

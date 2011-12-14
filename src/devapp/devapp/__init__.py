@@ -12,6 +12,7 @@ def main(global_config, **settings):
     """ This is your application startup.
     """
     config = Configurator(settings=settings)
+    config.include('ptah_crowd')
     config.commit()
     config.begin()
 
