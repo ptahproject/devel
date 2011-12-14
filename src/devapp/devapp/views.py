@@ -9,14 +9,14 @@ from initialize import ApplicationRoot
 
 
 ptah.layout.register(
-    'page', renderer="devapp:templates/layoutpage.pt")
+    'page', root=ApplicationRoot, renderer="devapp:templates/layoutpage.pt")
 
 ptah.layout.register(
-    'ptah-page', parent='workspace',
+    'ptah-page', root=ApplicationRoot, parent='workspace',
     renderer="devapp:templates/layout-ptahpage.pt")
 
 
-@ptah.layout('workspace', ApplicationRoot, parent="page",
+@ptah.layout('workspace', ApplicationRoot, root=ApplicationRoot, parent="page",
              renderer="devapp:templates/layoutworkspace.pt")
 
 class LayoutWorkspace(ptah.View):
@@ -29,7 +29,7 @@ class LayoutWorkspace(ptah.View):
             ptah.auth_service.get_userid(), self.request)
 
 
-@ptah.layout('', ptah.cms.Content, parent="workspace",
+@ptah.layout('', ptah.cms.Node, root=ApplicationRoot, parent="workspace",
              renderer="devapp:templates/layoutcontent.pt")
 class ContentLayout(ptah.View):
 
