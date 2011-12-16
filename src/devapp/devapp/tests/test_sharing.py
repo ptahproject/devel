@@ -46,7 +46,7 @@ class TestSharingForm(Base):
         form.csrf = False
         form.update()
 
-        self.assertIn('Please specify search term', 
+        self.assertIn('Please specify search term',
                       form.request.session['msgservice'][0])
 
     def test_sharingform_update(self):

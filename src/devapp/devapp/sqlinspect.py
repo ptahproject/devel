@@ -1,6 +1,5 @@
 """ Very basic implementation for sql model migration """
 import logging
-import sqlahelper
 from sqlalchemy.engine import reflection
 
 import ptah

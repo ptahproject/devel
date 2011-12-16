@@ -1,5 +1,5 @@
 # devapp
-import sqlahelper
+import ptah
 import transaction
 from pyramid.config import Configurator
 
@@ -16,14 +16,20 @@ def main(global_config, **settings):
     config.commit()
     config.begin()
 
-    # init ptah
-    config.ptah_initialize()
+    # init ptah settings
+    config.ptah_initialize_settings()
+
+    # init ptah sqlalchemy
+    config.ptah_initialize_sql()
 
     # enable rest api
     config.ptah_rest_api()
 
+    # enable ptah manage
+    config.ptah_manage()
+
     # create sql tables
-    Base = sqlahelper.get_base()
+    Base = ptah.get_base()
     Base.metadata.create_all()
 
     # We are not in a web request; we need to manually commit.

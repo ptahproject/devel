@@ -1,6 +1,5 @@
 """ base class """
 import unittest
-import sqlahelper
 import transaction
 from ptah import config
 from pyramid import testing

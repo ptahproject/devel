@@ -43,7 +43,7 @@ class ContentLayout(ptah.View):
         permission = ptah.cms.View,
         renderer="devapp:templates/contentview.pt")
 class DefaultContentView(form.DisplayForm):
-                      
+
     @property
     def fields(self):
         return self.context.__type__.fieldset

@@ -53,7 +53,7 @@ def initialize(ev):
     pconfig.add_route(
         'second-app', '/second/*traverse',
         factory = ptah.cms.ApplicationFactory(
-            ApplicationRoot, '/second/', 'second', 'Test subpath CMS', 
+            ApplicationRoot, '/second/', 'second', 'Test subpath CMS',
             config = pconfig),
         use_global_views = True)
 
@@ -81,8 +81,10 @@ def initialize(ev):
     # some more setup
     root = factory(None)
 
+    Session = ptah.get_session()
+
     # admin user
-    user = ptah.cms.Session.query(ptah_crowd.CrowdUser).first()
+    user = Session.query(ptah_crowd.CrowdUser).first()
     if user is None:
         user = ptah_crowd.CrowdUser(
             title='Ptah admin',
@@ -102,7 +104,7 @@ def initialize(ev):
         page.text = open(
             resolver.resolve('welcome.pt').abspath(), 'rb').read()
 
-        ptah.cms.Session.add(page)
+        Session.add(page)
         pconfig.registry.notify(ptah.events.ContentCreatedEvent(page))
 
         root['front-page'] = page
@@ -111,14 +113,14 @@ def initialize(ev):
     if 'folder' not in root.keys():
         folder = Folder(title='Test folder')
         root['folder'] = folder
-        ptah.cms.Session.add(folder)
+        Session.add(folder)
         pconfig.registry.notify(ptah.events.ContentCreatedEvent(folder))
 
         page = Page(title=u'Welcome to Ptah')
         page.text = open(
             resolver.resolve('welcome.pt').abspath(), 'rb').read()
 
-        ptah.cms.Session.add(page)
+        Session.add(page)
         pconfig.registry.notify(ptah.events.ContentCreatedEvent(page))
 
         folder['front-page'] = page
