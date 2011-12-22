@@ -13,20 +13,18 @@ def main(global_config, **settings):
     """
     config = Configurator(settings=settings)
     config.include('ptah_crowd')
-    config.commit()
-    config.begin()
 
     # init ptah settings
-    config.ptah_initialize_settings()
+    config.ptah_init_settings()
 
     # init ptah sqlalchemy
-    config.ptah_initialize_sql()
+    config.ptah_init_sql()
 
     # enable rest api
-    config.ptah_rest_api()
+    config.ptah_init_rest()
 
     # enable ptah manage
-    config.ptah_manage()
+    config.ptah_init_manage()
 
     # create sql tables
     Base = ptah.get_base()

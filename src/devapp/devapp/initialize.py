@@ -46,9 +46,6 @@ def initialize(ev):
     pconfig.add_route('test-welcome', '/welcome.html')
     pconfig.add_view(route_name='test-welcome', renderer='devapp:welcome.pt')
 
-    # enable rest api
-    pconfig.ptah_rest_api()
-
     # mount cms to /second/
     pconfig.add_route(
         'second-app', '/second/*traverse',
