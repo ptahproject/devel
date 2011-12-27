@@ -75,6 +75,8 @@ def initialize(ev):
     pconfig.set_root_factory(factory)
     ev.app.root_factory = factory
 
+    ptah.auth_service.set_userid(ptah.SUPERUSER_URI)
+
     # some more setup
     root = factory(None)
 

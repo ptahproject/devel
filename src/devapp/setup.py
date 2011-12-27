@@ -9,6 +9,7 @@ requires = [
     'poster',
     'pyramid_beaker',
     'sqlalchemy_migrate',
+    'simplejson',
 ]
 
 

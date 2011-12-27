@@ -13,6 +13,7 @@ def main(global_config, **settings):
     """
     config = Configurator(settings=settings)
     config.include('ptah_crowd')
+    config.include('devapp')
 
     # init ptah settings
     config.ptah_init_settings()
