@@ -56,5 +56,9 @@ class DefaultContentView(form.DisplayForm):
         return data
 
 
-#class DefaultEditForm(ptah.cms.EditForm):
-#    view.pview('edit.html', ptah.cms.Content, permission=ptah.cms.ModifyContent)
+@view_config(
+    'edit.html', context=ptah.cms.Content, 
+    wrapper=ptah.wrap_layout(),
+    permission=ptah.cms.ModifyContent)
+class DefaultEditForm(ptah.cms.EditForm):
+    pass
