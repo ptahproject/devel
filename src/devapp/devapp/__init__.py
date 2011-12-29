@@ -12,6 +12,7 @@ def main(global_config, **settings):
     """ This is your application startup.
     """
     config = Configurator(settings=settings)
+    config.include('pyramid_mailer')
     config.include('ptah_crowd')
     config.include('devapp')
 
@@ -26,6 +27,11 @@ def main(global_config, **settings):
 
     # enable ptah manage
     config.ptah_init_manage()
+
+    # set ptah mailer
+    from pyramid_mailer.interfaces import IMailer
+    mailer = config.registry.queryUtility(IMailer)
+    config.ptah_init_mailer(mailer.direct_delivery)
 
     # create sql tables
     Base = ptah.get_base()

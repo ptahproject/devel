@@ -9,15 +9,18 @@ from initialize import ApplicationRoot
 
 
 ptah.layout.register(
-    'page', root=ApplicationRoot, renderer="devapp:templates/layoutpage.pt")
+    'page', root=ApplicationRoot, renderer="devapp:templates/layoutpage.pt",
+    use_global_views=True)
 
 ptah.layout.register(
     'ptah-page', root=ApplicationRoot, parent='workspace',
-    renderer="devapp:templates/layout-ptahpage.pt")
+    renderer="devapp:templates/layout-ptahpage.pt",
+    use_global_views=True)
 
 
 @ptah.layout('workspace', ApplicationRoot, root=ApplicationRoot, parent="page",
-             renderer="devapp:templates/layoutworkspace.pt")
+             renderer="devapp:templates/layoutworkspace.pt",
+             use_global_views=True)
 
 class LayoutWorkspace(ptah.View):
 
