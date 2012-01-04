@@ -14,11 +14,11 @@ class Poll(ptah.cms.Node):
         sqla.ForeignKey('ptah_cms_nodes.id'), primary_key=True)
 
     title = sqla.Column(
-        sqla.Unicode(), default=u'',
+        sqla.Unicode(255), default=u'',
         info = {'title': 'Title'})
 
     description = sqla.Column(
-        sqla.Unicode(), default=u'',
+        sqla.UnicodeText(), default=u'',
         info = {'title': 'Title',
                 'field_type': 'textarea'})
 

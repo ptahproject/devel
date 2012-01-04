@@ -28,14 +28,13 @@ def main(global_config, **settings):
     # enable ptah manage
     config.ptah_init_manage()
 
+    # enable ptah manage
+    config.ptah_populate()
+
     # set ptah mailer
     from pyramid_mailer.interfaces import IMailer
     mailer = config.registry.queryUtility(IMailer)
     config.ptah_init_mailer(mailer.direct_delivery)
-
-    # create sql tables
-    Base = ptah.get_base()
-    Base.metadata.create_all()
 
     # We are not in a web request; we need to manually commit.
     transaction.commit()

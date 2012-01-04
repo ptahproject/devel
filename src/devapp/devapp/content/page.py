@@ -18,7 +18,7 @@ class Page(cms.Content):
         name_suffix = '.html',
         )
 
-    text = sqla.Column(sqla.Unicode,
+    text = sqla.Column(sqla.UnicodeText,
                        info = {'field_type': 'tinymce', 'missing': ''})
 
 

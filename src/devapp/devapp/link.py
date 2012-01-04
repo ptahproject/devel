@@ -7,7 +7,7 @@ class Link(ptah.cms.Content):
     __tablename__ = 'ptah_cms_link'
     __type__ = ptah.cms.Type('link', permission=ptah.cms.AddContent)
 
-    href = sqla.Column(sqla.Unicode)
+    href = sqla.Column(sqla.Unicode(255))
 
 
 #@ptah.view.pview(context=Link, permission=ptah.cms.View)

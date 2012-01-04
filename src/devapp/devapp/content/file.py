@@ -20,7 +20,7 @@ class File(cms.Content):
         )
 
     blobref = sqla.Column(
-        sqla.Unicode,
+        sqla.String(255),
         info = {'title': 'Data',
                 'field_type': 'file',
                 'uri': True})
