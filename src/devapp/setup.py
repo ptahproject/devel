@@ -5,12 +5,9 @@ from setuptools import setup
 requires = [
     'ptah',
     'ptah_crowd',
-    'biga',
     'poster',
     'pyramid_beaker',
     'pyramid_mailer',
-    'sqlalchemy_migrate',
-    'simplejson',
 ]
 
 
