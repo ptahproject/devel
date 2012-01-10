@@ -9,24 +9,10 @@ Ptah dev
 
 2. Run application:
 
-   >> ./bin/paster serve ptah.ini
+   >> ./bin/pserve ptah.ini
 
 3. Application runs on 8080 port:
 
    >> http://localhost:8080/
 
 4. Default login `admin`, password: `12345`
-
-5. List application settings
-
-   >> ./bin/settings -a
-   >> ./bin/settings -l mail
-   >> ./bin/settings -p
-
-6. Application template customizations
-
-   >> ./bin/paster templates -h
-   
-7 Application static assets management
-
-  >> ./bin/paster static -h
