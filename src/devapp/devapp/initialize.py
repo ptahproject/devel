@@ -78,6 +78,10 @@ def initialize(ev):
     ptah.auth_service.set_userid(ptah.SUPERUSER_URI)
 
     # some more setup
+    session = ptah.get_session()
+    if not (session.bind and ptah.cms.Node.__table__.exists()):
+        return
+
     root = factory(None)
 
     Session = ptah.get_session()
