@@ -5,21 +5,21 @@ from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 
 import ptah
 
-from initialize import ApplicationRoot
+from initialize import DevApplicationRoot
 
 
 ptah.layout.register(
-    'page', root=ApplicationRoot, renderer="devapp:templates/layoutpage.pt",
+    'page', root=DevApplicationRoot, renderer="devapp:templates/layoutpage.pt",
     use_global_views=True)
 
 ptah.layout.register(
-    'ptah-page', root=ApplicationRoot, parent='workspace',
+    'ptah-page', root=DevApplicationRoot, parent='workspace',
     renderer="devapp:templates/layout-ptahpage.pt",
     use_global_views=True)
 
 
-@ptah.layout('workspace', ApplicationRoot, root=ApplicationRoot, parent="page",
-             renderer="devapp:templates/layoutworkspace.pt",
+@ptah.layout('workspace', DevApplicationRoot, root=DevApplicationRoot, 
+             parent="page", renderer="devapp:templates/layoutworkspace.pt",
              use_global_views=True)
 
 class LayoutWorkspace(ptah.View):
@@ -32,7 +32,7 @@ class LayoutWorkspace(ptah.View):
             ptah.auth_service.get_userid(), self.request)
 
 
-@ptah.layout('', ptah.cms.Node, root=ApplicationRoot, parent="workspace",
+@ptah.layout('', ptah.cms.Node, root=DevApplicationRoot, parent="workspace",
              renderer="devapp:templates/layoutcontent.pt")
 class ContentLayout(ptah.View):
 

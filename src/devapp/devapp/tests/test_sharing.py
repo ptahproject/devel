@@ -9,7 +9,7 @@ from base import Base
 
 TestRole = ptah.Role('test', 'Test role')
 
-class Container(ptah.cms.Container):
+class _Container(ptah.cms.Container):
 
     __type__ = ptah.cms.Type('container', 'Test Container')
     __uri_factory__ = ptah.UriFactory('cms-container')
