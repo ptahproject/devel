@@ -1,13 +1,16 @@
 import ptah
-from ptah import cms, view, form
+from ptah import form
+from pyramid.view import view_config
+from pyramid.response import Response
 from pyramid.httpexceptions import HTTPFound
 
 
+@view_config('sharing.html', context=ptah.ILocalRolesAware,
+             permission = ptah.cms.ShareContent,
+             wrapper = ptah.wrap_layout(),
+             renderer = 'devapp:templates/sharing.pt')
+
 class SharingForm(form.Form):
-    #view.pview(
-    #    'sharing.html', ptah.ILocalRolesAware,
-    #    permission = cms.ShareContent,
-    #    template = view.template('devapp:templates/sharing.pt'))
 
     csrf = True
     fields = form.Fieldset(
@@ -29,7 +32,10 @@ class SharingForm(form.Form):
         return ptah.resolve(id)
 
     def update(self):
-        super(SharingForm, self).update()
+        res = super(SharingForm, self).update()
+        
+        if isinstance(res, Response):
+            return res
 
         request = self.request
         context = self.context
