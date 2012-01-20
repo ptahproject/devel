@@ -1,10 +1,8 @@
 import gevent
 
-from pyramid.renderers import render_to_response
-from pyramid.response import Response
 from pyramid.view import view_config
-from pyramid_socketio.io import SocketIOContext
-from pyramid_socketio.io import socketio_manage
+from pyramid.httpexceptions import HTTPNotFound
+from pyramid.renderers import render_to_response
 
 
 _messages = []
@@ -24,7 +22,7 @@ def broadcast_view(request):
         _messages.append(message)
 
 
-class ConnectIOContext(SocketIOContext):
+class ConnectJSContext(object): #SockJSContext):
 
     def msg_connect(self, msg):
         print "connect message received", msg
@@ -37,10 +35,3 @@ class ConnectIOContext(SocketIOContext):
                     index += 1
                 gevent.sleep(0.5)
         self.spawn(broadcast)
-
-
-@view_config(route_name="views.socket_io")
-def socketio_service(request):
-    print "socket.io request running"
-    return_value = socketio_manage(ConnectIOContext(request))
-    return Response(return_value)

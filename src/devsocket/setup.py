@@ -1,14 +1,10 @@
-from setuptools import find_packages
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 requires = [
     'pyramid',
-    'pyramid_socketio',
     'gevent',
-    'gevent-socketio',
-    'gevent-websocket',
-    'greenlet',
+    'gevent-sockjs',
 ]
 
 
@@ -26,9 +22,7 @@ setup(
     zip_safe=False,
     install_requires = requires,
     entry_points = {
-        'ptah': ['package = devapp'],
-        'console_scripts': [
-            'socket-server = devsocket.server:main',
-        ],
+        'paste.app_factory': [
+            'main = devsocket.app:main'],
     },
 )

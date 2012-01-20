@@ -8,26 +8,21 @@
     <body>
 
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
-        <script src="http://cdn.socket.io/stable/socket.io.js"></script>
+        <script src="http://cdn.sockjs.org/sockjs-0.2.min.js"></script>
         <script>
-            var socket = new io.Socket(null, {port: 9090,
-                                              rememberTransport: false});
+	  var sock = new SockJS('http://localhost:9090/__sockjs__');
 
-            socket.on('connect', function() {
-                socket.send({type: 'connect'});
-            });
+	  sock.onopen = function() {
+   	     console.log('open');
+          };
 
-            socket.on('message', function(obj) {
-                alert(obj.message);
-            });
+          sock.onmessage = function(obj) {
+	     console.log(obj);
+          };
 
-            socket.on('error', function(obj) {
-            });
-
-            socket.on('disconnect', function() {
-            });
-
-            socket.connect();
+          sock.onclose = function() {
+	     console.log('close');
+          };
         </script>
     </body>
 </html>
