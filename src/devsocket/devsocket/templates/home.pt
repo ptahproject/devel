@@ -10,7 +10,8 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
         <script src="http://cdn.sockjs.org/sockjs-0.2.min.js"></script>
         <script>
-	  var sock = new SockJS('http://localhost:9090/__sockjs__');
+	  var sock = new SockJS('http://localhost:9090/__sockjs__',
+	  ['xhr-streaming'], {debug: true});
 
 	  sock.onopen = function() {
    	     console.log('open');

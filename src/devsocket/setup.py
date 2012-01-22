@@ -3,8 +3,7 @@ from setuptools import setup, find_packages
 
 requires = [
     'pyramid',
-    'gevent',
-    'gevent-sockjs',
+    'pyramid_sockjs',
 ]
 
 
@@ -24,5 +23,5 @@ setup(
     entry_points = {
         'paste.app_factory': [
             'main = devsocket.app:main'],
-    },
-)
+        },
+    )
