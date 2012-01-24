@@ -10,9 +10,10 @@ def main(global_settings, **settings):
     config = Configurator(settings=settings,)
                           #session_factory = session_factory)
     config.include('ptah')
+    config.include('ptah_crowd')
     config.include('pyramid_sockjs')
 
-    config.add_route('views.home', '/')
+    #config.add_route('views.home', '/')
     config.add_route('views.broadcast', '/broadcast')
     config.scan('devsocket.views')
 
@@ -24,8 +25,11 @@ def main(global_settings, **settings):
 
     config.add_sockjs_route(session=ChatSession)
 
-    # init ptah settings
+    # init ptah
+    config.ptah_init_sql()
     config.ptah_init_settings()
+
+    config.include('devapp')
 
     # enable ptah manage
     config.ptah_init_manage(managers=['*'])
