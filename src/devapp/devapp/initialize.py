@@ -39,7 +39,7 @@ class ApplicationPolicy(object):
         self.request = request
 
 
-#@ptah.subscriber(ApplicationCreated)
+@ptah.subscriber(ApplicationCreated)
 def initialize(ev):
     pconfig = Configurator(ev.app.registry)
 
