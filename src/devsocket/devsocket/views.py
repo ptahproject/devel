@@ -17,4 +17,4 @@ def broadcast_view(request):
         manager = request.get_sockjs_manager()
         manager.broadcast([message])
 
-    return 'Message has been sent' 
+    return 'Message has been sent'

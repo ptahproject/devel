@@ -29,7 +29,7 @@ def main(global_settings, **settings):
     config.ptah_init_sql()
     config.ptah_init_settings()
 
-    config.include('devapp')
+    #config.include('devapp')
 
     # enable ptah manage
     config.ptah_init_manage(managers=['*'])
