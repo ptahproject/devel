@@ -22,6 +22,6 @@ src/ptah_crowd
 src/pyramid
 src/pyramid_sockjs
 src/gevent
-src/gevent_websocket
+src/gevent-websocket
 src/velruse
 downloads/dist
