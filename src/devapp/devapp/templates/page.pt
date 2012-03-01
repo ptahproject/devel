@@ -4,5 +4,5 @@
 <p>${context.description}</p>
 
 <div class="content">
-  ${context.text}
+  ${structure: context.text}
 </div>

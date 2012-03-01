@@ -1,7 +1,9 @@
-<div class="row">
-  <div class="span16 columns">
-    <tal:block content="structure view.render_messages()" />
-
-    ${structure: wrapped_content}
+<div class="container">
+  <div class="row">
+    <div class="span12">
+      <tal:block content="structure view.render_messages()" />
+      
+      ${structure: wrapped_content}
+    </div>
   </div>
 </div>

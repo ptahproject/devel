@@ -17,11 +17,10 @@ db.sqlite
 source
 src/docs
 src/ptah
-src/biga
 src/ptah_crowd
+src/ptah_nextui
 src/pyramid
 src/pyramid_sockjs
-src/gevent
-src/gevent-websocket
+src/pyramid_jca
 src/velruse
 downloads/dist

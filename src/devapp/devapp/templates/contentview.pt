@@ -5,16 +5,16 @@
   <fieldset>
     <div class="clearfix" tal:repeat="widget view.widgets.values()">
       <label tal:attributes="for widget.id;
-			     title widget.description">
-	${widget.title}
-	<tal:block condition="widget.required">*</tal:block>
+                             title widget.description">
+        ${widget.title}
+        <tal:block condition="widget.required">*</tal:block>
       </label>
 
       <div class="input">
-	<span tal:content="structure widget.value" />
-	<span class="help-block"
-	      tal:condition="widget.description"
-	      tal:content="structure widget.description"></span>
+        <span tal:content="structure widget.value" />
+        <span class="help-block"
+              tal:condition="widget.description"
+              tal:content="structure widget.description"></span>
       </div>
     </div>
   </fieldset>
