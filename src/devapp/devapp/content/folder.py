@@ -1,5 +1,5 @@
 """ Generic folder implementation """
-from ptah import cms
+import ptahcms as cms
 from devapp.permissions import AddFolder
 
 

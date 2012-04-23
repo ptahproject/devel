@@ -4,6 +4,7 @@ from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 
 import ptah
+import ptahcms
 
 from initialize import DevApplicationRoot
 
@@ -32,7 +33,7 @@ class LayoutWorkspace(ptah.View):
             ptah.auth_service.get_userid(), self.request)
 
 
-@ptah.layout('', ptah.cms.Node, root=DevApplicationRoot, parent="workspace",
+@ptah.layout('', ptahcms.Node, root=DevApplicationRoot, parent="workspace",
              renderer="devapp:templates/layoutcontent.pt")
 class ContentLayout(ptah.View):
 
@@ -41,9 +42,9 @@ class ContentLayout(ptah.View):
 
 
 @view_config(
-        context = ptah.cms.Content,
+        context = ptahcms.Content,
         wrapper = ptah.wrap_layout(),
-        permission = ptah.cms.View,
+        permission = ptahcms.View,
         renderer="devapp:templates/contentview.pt")
 class DefaultContentView(form.DisplayForm):
 
@@ -60,8 +61,8 @@ class DefaultContentView(form.DisplayForm):
 
 
 @view_config(
-    'edit.html', context=ptah.cms.Content, 
+    'edit.html', context=ptahcms.Content, 
     wrapper=ptah.wrap_layout(),
-    permission=ptah.cms.ModifyContent)
-class DefaultEditForm(ptah.cms.EditForm):
+    permission=ptahcms.ModifyContent)
+class DefaultEditForm(ptahcms.EditForm):
     pass

@@ -1,5 +1,6 @@
 import transaction
 import ptah
+import ptahcms
 from ptah import config
 from pyramid.testing import DummyRequest
 from pyramid.httpexceptions import HTTPFound
@@ -9,16 +10,16 @@ from base import Base
 
 TestRole = ptah.Role('test', 'Test role')
 
-class _Container(ptah.cms.Container):
+class _Container(ptahcms.Container):
 
-    __type__ = ptah.cms.Type('container', 'Test Container')
+    __type__ = ptahcms.Type('container', 'Test Container')
     __uri_factory__ = ptah.UriFactory('cms-container')
 
 
 class TestSharingForm(Base):
 
     def test_sharingform_search(self):
-        from ptah.cmsapp.sharing import SharingForm
+        from ptahcmsapp.sharing import SharingForm
 
         container = Container()
 
@@ -37,7 +38,7 @@ class TestSharingForm(Base):
             form.request.session['sharing-search-term'], 'search term')
 
     def test_sharingform_search_error(self):
-        from ptah.cmsapp.sharing import SharingForm
+        from ptahcmsapp.sharing import SharingForm
 
         container = Container()
 
@@ -50,7 +51,7 @@ class TestSharingForm(Base):
                       form.request.session['msgservice'][0])
 
     def test_sharingform_update(self):
-        from ptah.cmsapp.sharing import SharingForm
+        from ptahcmsapp.sharing import SharingForm
         from ptah.crowd.provider import CrowdUser, Session
 
         user = CrowdUser('name', 'login', 'email')
@@ -72,7 +73,7 @@ class TestSharingForm(Base):
         self.assertEqual(form.get_principal(user.uri).uri, user.uri)
 
     def test_sharingform_save(self):
-        from ptah.cmsapp.sharing import SharingForm
+        from ptahcmsapp.sharing import SharingForm
         from ptah.crowd.provider import CrowdUser, Session
 
         user = CrowdUser('name', 'login', 'email')
@@ -93,7 +94,7 @@ class TestSharingForm(Base):
         self.assertIn(TestRole.id, container.__local_roles__[user.uri])
 
     def test_sharingform_unset(self):
-        from ptah.cmsapp.sharing import SharingForm
+        from ptahcmsapp.sharing import SharingForm
         from ptah.crowd.provider import CrowdUser, Session
 
         user = CrowdUser('name', 'login', 'email')

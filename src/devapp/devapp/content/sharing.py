@@ -1,4 +1,5 @@
 import ptah
+import ptahcms
 from ptah import form
 from pyramid.view import view_config
 from pyramid.response import Response
@@ -6,7 +7,7 @@ from pyramid.httpexceptions import HTTPFound
 
 
 @view_config('sharing.html', context=ptah.ILocalRolesAware,
-             permission = ptah.cms.ShareContent,
+             permission = ptahcms.ShareContent,
              wrapper = ptah.wrap_layout(),
              renderer = 'devapp:templates/sharing.pt')
 

@@ -1,26 +1,27 @@
 """ default actions """
 import ptah
+import ptahcms
 
 ptah.uiaction(
-    ptah.cms.IContent, **{'id': 'view',
+    ptahcms.IContent, **{'id': 'view',
                           'title': 'View',
                           'action': '',
-                          'permission': ptah.cms.View,
+                          'permission': ptahcms.View,
                           'sort_weight': 0.5})
 
 ptah.uiaction(
-    ptah.cms.IContent, **{'id': 'edit',
+    ptahcms.IContent, **{'id': 'edit',
                           'title': 'Edit',
                           'action': 'edit.html',
-                          'permission': ptah.cms.ModifyContent,
+                          'permission': ptahcms.ModifyContent,
                           'sort_weight': 0.6})
 
 
 ptah.uiaction(
-    ptah.cms.IContainer, **{'id': 'adding',
+    ptahcms.IContainer, **{'id': 'adding',
                             'title': 'Add content',
                             'action': '+/',
-                            'permission': ptah.cms.AddContent,
+                            'permission': ptahcms.AddContent,
                             'sort_weight': 5.0})
 
 
@@ -28,5 +29,5 @@ ptah.uiaction(
     ptah.ILocalRolesAware, **{'id': 'sharing',
                               'title': 'Sharing',
                               'action': 'sharing.html',
-                              'permission': ptah.cms.ShareContent,
+                              'permission': ptahcms.ShareContent,
                               'sort_weight': 10.0})

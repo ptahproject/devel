@@ -2,7 +2,7 @@
 import ptah
 import sqlalchemy as sqla
 
-from ptah import cms
+import ptahcms as cms
 from devapp.permissions import AddPage
 
 

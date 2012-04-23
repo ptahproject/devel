@@ -6,6 +6,7 @@ from pyramid.config import Configurator
 from pyramid.events import ApplicationCreated
 
 import ptah
+import ptahcms
 import ptah_crowd
 
 from devapp.content.page import Page, AddPage
@@ -15,16 +16,16 @@ acl = ptah.ACL('simple-map', 'Simple permissions map')
 acl.allow(ptah.Everyone, AddPage)
 
 
-class DevApplicationRoot(ptah.cms.ApplicationRoot):
+class DevApplicationRoot(ptahcms.ApplicationRoot):
 
-    __type__ = ptah.cms.Type(
+    __type__ = ptahcms.Type(
         'app', 'Application',
         description = 'Default ptah application')
 
 
 class ApplicationPolicy(object):
     interface.implements(ptah.ILocalRolesAware,
-                         ptah.cms.IApplicationPolicy)
+                         ptahcms.IApplicationPolicy)
 
     __name__ = ''
     __parent__ = None
@@ -49,7 +50,7 @@ def initialize(ev):
     # mount cms to /second/
     pconfig.add_route(
         'second-app', '/second/*traverse',
-        factory = ptah.cms.ApplicationFactory(
+        factory = ptahcms.ApplicationFactory(
             DevApplicationRoot, '/second/', u'second', 'Test subpath CMS',
             config = pconfig),
         use_global_views = True)
@@ -57,20 +58,20 @@ def initialize(ev):
     # mount cms to /third/cms/
     pconfig.add_route(
         'third-app', '/third/cms/*traverse',
-        factory = ptah.cms.ApplicationFactory(
+        factory = ptahcms.ApplicationFactory(
             DevApplicationRoot, '/third/cms/', u'third-app', 'CMS', 
             config=pconfig),
         use_global_views = True)
 
     # mount cms to /cms/
-    factory = ptah.cms.ApplicationFactory(
+    factory = ptahcms.ApplicationFactory(
         DevApplicationRoot, '/cms/', u'root', 'Ptah CMS', config=pconfig)
     pconfig.add_route(
         'root-app', '/cms/*traverse',
         factory = factory, use_global_views = True)
 
     # mount same 'root' application to '/' location
-    factory = ptah.cms.ApplicationFactory(
+    factory = ptahcms.ApplicationFactory(
         DevApplicationRoot, '/', u'root', 'Ptah CMS',
         policy=ApplicationPolicy, default_root=True, config=pconfig)
     pconfig.set_root_factory(factory)
@@ -80,7 +81,7 @@ def initialize(ev):
 
     # some more setup
     session = ptah.get_session()
-    if not (session.bind and ptah.cms.Node.__table__.exists()):
+    if not (session.bind and ptahcms.Node.__table__.exists()):
         return
 
     root = factory(None)

@@ -4,11 +4,13 @@ from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 
 import ptah
-from ptah import auth_service, cms
+import ptahcms
+import ptahcms as cms
+from ptah import auth_service
 
 
 @view_config(
-    context=ptah.cms.Container,
+    context=ptahcms.Container,
     wrapper=ptah.wrap_layout(),
     renderer='devapp:templates/listing.pt')
 class ContainerListing(view.View):
@@ -44,7 +46,7 @@ class ContainerListing(view.View):
 
 
 #class ViewContainer(ContainerListing):
-#    view.pview(context = ptah.cms.Container,
+#    view.pview(context = ptahcms.Container,
 #               template = listing_template)
 
 
@@ -54,7 +56,7 @@ class ContainerListing(view.View):
 #        template=view.template("devapp:templates/folder_rename.pt"))
 
 
-@view_config('+', context=ptah.cms.Container,
+@view_config('+', context=ptahcms.Container,
              wrapper=ptah.wrap_layout(),
              renderer='devapp:templates/adding.pt')
 class Adding(view.View):

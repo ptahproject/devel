@@ -3,7 +3,7 @@ import sqlalchemy as sqla
 from ptah import view, form
 
 import ptah
-from ptah import cms
+import ptahcms as cms
 from devapp.permissions import AddFile
 
 

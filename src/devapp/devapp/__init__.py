@@ -14,6 +14,7 @@ def main(global_config, **settings):
     config = Configurator(settings=settings)
     config.include('pyramid_mailer')
     config.include('ptah_crowd')
+    config.include('ptahcms')
     config.include('devapp')
 
     # init ptah settings
