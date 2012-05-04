@@ -17,7 +17,8 @@ db.sqlite
 source
 src/docs
 src/ptah
-src/ptah_crowd
+src/ptahcms
+src/ptahcrowd
 src/ptah_nextui
 src/pyramid
 src/pyramid_sockjs

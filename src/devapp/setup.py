@@ -4,7 +4,8 @@ from setuptools import setup
 
 requires = [
     'ptah',
-    'ptah_crowd',
+    'ptahcms',
+    'ptahcrowd',
     'poster',
     'pyramid_beaker',
     'pyramid_mailer',

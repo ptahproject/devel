@@ -13,7 +13,7 @@ def main(global_config, **settings):
     """
     config = Configurator(settings=settings)
     config.include('pyramid_mailer')
-    config.include('ptah_crowd')
+    config.include('ptahcrowd')
     config.include('ptahcms')
     config.include('devapp')
 

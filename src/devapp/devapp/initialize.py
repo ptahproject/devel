@@ -7,7 +7,7 @@ from pyramid.events import ApplicationCreated
 
 import ptah
 import ptahcms
-import ptah_crowd
+import ptahcrowd
 
 from devapp.content.page import Page, AddPage
 from devapp.content.folder import Folder
@@ -89,17 +89,17 @@ def initialize(ev):
     Session = ptah.get_session()
 
     # admin user
-    user = Session.query(ptah_crowd.CrowdUser).first()
-    if user is None:
-        user = ptah_crowd.CrowdUser(
-            title='Ptah admin',
-            login='admin',
-            email='admin@ptahproject.org',
-            password='12345')
-        crowd = ptah_crowd.CrowdFactory()
-        crowd.add(user)
+    #user = Session.query(ptahcrowd.CrowdUser).first()
+    #if user is None:
+    #    user = ptahcrowd.CrowdUser(
+    #        title='Ptah admin',
+    #        login='admin',
+    #        email='admin@ptahproject.org',
+    #        password='12345')
+    #    crowd = ptahcrowd.CrowdFactory()
+    #    crowd.add(user)
 
-    ApplicationPolicy.__local_roles__ = {user.__uri__: ['role:manager']}
+    #ApplicationPolicy.__local_roles__ = {user.__uri__: ['role:manager']}
 
     resolver = AssetResolver()
 
