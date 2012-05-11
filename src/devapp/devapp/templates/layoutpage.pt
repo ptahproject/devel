@@ -4,8 +4,7 @@
     <title>${getattr(root, 'title', '')}</title>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
     
-    ${request.include_library('curl')}
-    ${view.include('bootstrap')}
+    ${request.include_library('curl', 'bootstrap')}
     ${structure: view.render_includes()}
   </head>
 
