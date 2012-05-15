@@ -14,6 +14,7 @@ var/*
 *.pt.pyc
 .DS_Store
 db.sqlite
+cache
 source
 src/docs
 src/ptah
